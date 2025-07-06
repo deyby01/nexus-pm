@@ -1,0 +1,20 @@
+# Archivos de Entorno Virtual
+venv/
+.venv/
+__pycache__/
+
+# Archivos de Entorno de Desarrollo
+.env
+
+# Archivos de Base de Datos
+*.sqlite3
+
+# Archivos de Medios de Django
+/media/
+
+# Archivos estáticos recolectados
+/static/
+
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
