@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from django.views.generic import ListView, CreateView
+from django.views.generic import ListView, CreateView, DetailView
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership
-from .forms import WorkspaceForm
+from .models import Workspace, Membership, Project
+from .forms import WorkspaceForm, ProjectForm
 
 class WorkspaceListView(LoginRequiredMixin, ListView):
     model = Workspace
@@ -32,3 +33,34 @@ class WorkspaceCreateView(LoginRequiredMixin, CreateView):
             role=Membership.Role.ADMIN)
         
         return response
+    
+
+class WorkspaceDetailView(LoginRequiredMixin, DetailView):
+    model = Workspace
+    template_name = 'core/workspace_detail.html'
+    context_object_name = 'workspace'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Añadimos el formulario para crear proyectos al contexto
+        context['project_form'] = ProjectForm()
+        return context
+    
+    def get_queryset(self):
+        # Asegurarnos que el usuario solo puede ver workspaces a los que pertenece
+        return self.request.user.workspaces.all()
+    
+
+class ProjectCreateView(LoginRequiredMixin, CreateView):
+    model = Project
+    form_class = ProjectForm
+    
+    def form_valid(self, form):
+        # Buscamos el workspace usando el slug de la URL
+        workspace = get_object_or_404(Workspace, slug=self.kwargs['workspace_slug'], members=self.request.user)
+        # Asignamos el workspace al proyecto
+        form.instance.workspace = workspace
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('core:workspace_detail', kwargs={'slug': self.kwargs['workspace_slug']})

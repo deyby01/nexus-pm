@@ -1,0 +1,19 @@
+<h1>Workspace: {{ workspace.name }}</h1>
+<hr>
+
+<h2>Proyectos</h2>
+<ul>
+    {% for project in workspace.projects.all %}
+        <li>{{ project.name }} - (Límite: {{ project.deadline|default:"Sin fecha" }})</li>
+    {% empty %}
+        <li>Este espacio de trabajo aún no tiene proyectos.</li>
+    {% endfor %}
+</ul>
+<hr>
+
+<h3>Añadir Nuevo Proyecto</h3>
+<form action="{% url 'core:project_create' workspace_slug=workspace.slug %}" method="post">
+    {% csrf_token %}
+    {{ project_form.as_p }}
+    <button type="submit">Crear Proyecto</button>
+</form>

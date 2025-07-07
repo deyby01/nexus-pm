@@ -5,7 +5,7 @@
 
 <ul>
     {% for workspace in workspaces %}
-        <li>{{ workspace.name }} (Dueño: {{ workspace.owner.get_full_name }})</li>
+        <li><a href="{% url 'core:workspace_detail' slug=workspace.slug %}">{{ workspace.name }}</a> (Dueño: {{ workspace.owner.get_full_name }})</li>
     {% empty %}
         <li>Aún no pertences a ningún espacio de trabajo. ¡Crea uno!</li>
     {% endfor %}

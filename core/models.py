@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.text import slugify
+import shortuuid
 
 
 class User(AbstractUser):
@@ -22,10 +24,19 @@ class Workspace(models.Model):
     name = models.CharField(max_length=150)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_workspaces')
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, through="Membership", related_name='workspaces')
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            while Workspace.objects.filter(slug=base_slug).exists():
+                base_slug = f'{slugify(self.name)}-{shortuuid.uuid()[:4]}'
+            self.slug = base_slug
+        super().save(*args, **kwargs)
     
     
 class Membership(models.Model):
@@ -45,3 +56,67 @@ class Membership(models.Model):
         
     def __str__(self):
         return f"{self.user.get_full_name()} en {self.workspace.name} ({self.get_role_display()})"
+    
+    
+class Project(models.Model):
+    """ Representa un proyecto dentro de un workspace. """
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='projects')
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    deadline = models.DateField(blank=True, null=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            # Generamos un slug unico añadiendo un ID corto si ya existe
+            while Project.objects.filter(slug=base_slug).exists():
+                base_slug = f"{slugify(self.name)}-{shortuuid.uuid()[:4]}"
+            self.slug = base_slug
+        super().save(*args, **kwargs)
+        
+    
+class Task(models.Model):
+    """ Representa una tarea dentro de un proyecto. """
+    class Status(models.TextChoices):
+        BACKLOG = 'BACKLOG', 'Backlog'
+        TODO = 'TODO', 'Por Hacer'
+        IN_PROGRESS = 'IN_PROGRESS', 'En Progreso'
+        PAUSED = 'PAUSED', 'Pausada'
+        DONE = 'DONE', 'Completada'
+        CANCELED = 'CANCELED', 'Cancelada'
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
+    title = models.CharField(max_length=250)
+    description = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.BACKLOG)
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tasks'
+    )
+    due_date = models.DateField(blank=True, null=True)
+    slug = models.SlugField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        # El slug debe ser unico dentro de un mismo proyecto
+        unique_together = ('project', 'slug')
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title)
+            # Verificamos que el slug sea unico DENTRO DEL MISMO PROYECTO
+            while Task.objects.filter(project=self.project, slug=base_slug).exists():
+                base_slug = f"{slugify(self.title)}-{shortuuid.uuid()[:4]}"
+            self.slug = base_slug
+        super().save(*args, **kwargs)
