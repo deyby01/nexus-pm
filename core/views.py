@@ -3,7 +3,7 @@ from django.views.generic import ListView, CreateView, DetailView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership, Project
+from .models import Workspace, Membership, Project, Task
 from .forms import WorkspaceForm, ProjectForm
 
 class WorkspaceListView(LoginRequiredMixin, ListView):
@@ -64,3 +64,30 @@ class ProjectCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('core:workspace_detail', kwargs={'slug': self.kwargs['workspace_slug']})
+    
+
+class ProjectDetailView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = 'core/project_detail.html'
+    context_object_name = 'project'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.get_object()
+        
+        # Obtenemos todas las tareas y las agrupamos por estado
+        tasks = project.tasks.all()
+        grouped_tasks = {status: [] for status, label in Task.Status.choices}
+        
+        for task in tasks:
+            grouped_tasks[task.status].append(task)
+            
+        # Añadimos las tareas agrupadas y los estados al contexto
+        context['grouped_tasks'] = grouped_tasks
+        context['status_choices'] = Task.Status.choices
+        return context
+    
+    def get_queryset(self):
+        # Asegurarnos de que el proyecto pertenezca a un workspace del usuario
+        return Project.objects.filter(workspace__members=self.request.user)
+    
