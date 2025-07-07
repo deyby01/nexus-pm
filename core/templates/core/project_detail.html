@@ -6,6 +6,11 @@
 <h1 class="fw-bold text-dark mb-2">Proyecto: {{ project.name }}</h1>
 <p class="mb-4 text-secondary">{{ project.description|default:"" }}</p>
 
+{% if is_locked %}
+<div class="alert alert-warning" role="alert">
+    <strong>Proyecto Vencido.</strong> Las modificaciones están bloqueadas. Solo el dueño puede gestionarlo.
+</div>
+{% else %}
 <div class="mb-3">
     <button hx-get="{% url 'core:task_create' project_slug=project.slug %}"
             hx-target="#modal-container"
@@ -14,6 +19,7 @@
         + Añadir Nueva Tarea
     </button>
 </div>
+{% endif %}
 <div id="modal-container"></div>
 <hr class="mb-4">
 
@@ -33,5 +39,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/kanban.js' %}"></script>
+    {% if not is_locked %}
+        <script src="{% static 'js/kanban.js' %}"></script>
+    {% endif %}
 {% endblock %}

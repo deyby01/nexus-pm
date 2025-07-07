@@ -9,6 +9,7 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from .utils import can_user_interact_with_project
 
 class WorkspaceListView(LoginRequiredMixin, ListView):
     model = Workspace
@@ -89,6 +90,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         # Añadimos las tareas agrupadas y los estados al contexto
         context['grouped_tasks'] = grouped_tasks
         context['status_choices'] = Task.Status.choices
+        context['is_locked'] = not can_user_interact_with_project(project, self.request.user)
         return context
     
     def get_queryset(self):
@@ -118,6 +120,9 @@ def update_task_status(request):
             project__workspace__members=request.user
         )
         
+        if not can_user_interact_with_project(task.project, request.user):
+            return HttpResponseForbidden("El proyecto esta vencido y no puedes modificarlo.")
+        
         task.status = new_status
         task.save(update_fields=['status']) # Actualiza solo el campo 'status'
         
@@ -132,6 +137,9 @@ def update_task_status(request):
 @login_required
 def create_task(request, project_slug):
     project = get_object_or_404(Project, slug=project_slug, workspace__members=request.user)
+    
+    if not can_user_interact_with_project(project, request.user):
+        return HttpResponseForbidden("El proyecto esta vencido y no puedes crear tareas.")
     
     if request.method == 'POST':
         form = TaskForm(request.POST, workspace=project.workspace)
@@ -156,6 +164,9 @@ def task_detail_update(request, pk):
     task = get_object_or_404(Task, pk=pk, project__workspace__members=request.user)
     
     if request.method == 'POST':
+        if not can_user_interact_with_project(task.project, request.user):
+            return HttpResponseForbidden("El proyecto esta vencido y no puedes editar la tarea.")
+        
         form = TaskForm(request.POST, instance=task, workspace=task.project.workspace)
         if form.is_valid():
             update_task = form.save()
@@ -179,6 +190,10 @@ def task_detail_update(request, pk):
 @require_POST
 def add_attachment(request, task_pk):
     task = get_object_or_404(Task, pk=task_pk, project__workspace__members=request.user)
+    
+    if not can_user_interact_with_project(task.project, request.user):
+        return HttpResponseForbidden("El proyecto esta vencido y no puedes añadir adjuntos.")
+    
     form = AttachmentForm(request.POST, request.FILES)
 
     if form.is_valid():
