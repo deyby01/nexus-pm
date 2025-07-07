@@ -1,15 +1,50 @@
-<h1>Workspace: {{ workspace.name }}</h1>
-<hr>
+<style>
+    /* Estilos para las tarjetas de proyecto y la barra de progreso */
+    .project-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: white;
+    }
+    .progress-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.2em;
+        font-weight: bold;
+        float: right; /* Alinea la barra a la derecha */
+    }
+    /* Clases de colores para la salud del proyecto */
+    .status-En.Plazo { border-left: 5px solid #28a745; }
+    .status-En.Riesgo { border-left: 5px solid #ffc107; }
+    .status-Vencido { border-left: 5px solid #dc3545; }
+    .status-Terminado { border-left: 5px solid #17a2b8; }
+</style>
 
 <h2>Proyectos</h2>
-<ul>
-    {% for project in workspace.projects.all %}
-        <li><a href="{% url 'core:project_detail' slug=project.slug %}">{{ project.name }}</a> - (Límite: {{ project.deadline|default:"Sin fecha" }})</li>
-    {% empty %}
-        <li>Este espacio de trabajo aún no tiene proyectos.</li>
-    {% endfor %}
-</ul>
-<hr>
+
+{% for project in workspace.projects.all %}
+    <div class="project-card status-{{ project.health_status|slugify }}">
+        
+        <div class="progress-circle" style="background: conic-gradient(#4CAF50 {{ project.progress_percentage }}%, #e0e0e0 0);">
+            {{ project.progress_percentage }}%
+        </div>
+
+        <h3>
+            <a href="{% url 'core:project_detail' slug=project.slug %}">
+                {{ project.name }}
+            </a>
+        </h3>
+        <p><strong>Estado:</strong> {{ project.health_status }}</p>
+        <p><small>Límite: {{ project.deadline|default:"Sin fecha" }}</small></p>
+    </div>
+{% empty %}
+    <p>Este espacio de trabajo aún no tiene proyectos.</p>
+{% endfor %}
 
 <h3>Añadir Nuevo Proyecto</h3>
 <form action="{% url 'core:project_create' workspace_slug=workspace.slug %}" method="post">

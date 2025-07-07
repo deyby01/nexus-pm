@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.text import slugify
 import shortuuid
-
+from django.utils import timezone
 
 class User(AbstractUser):
     """ 
@@ -78,6 +78,35 @@ class Project(models.Model):
                 base_slug = f"{slugify(self.name)}-{shortuuid.uuid()[:4]}"
             self.slug = base_slug
         super().save(*args, **kwargs)
+    
+    @property
+    def health_status(self):
+        """ Calcula la salud del proyecto basandose en su fecha limite y estado. """
+        if self.tasks.exclude(status__in=[Task.Status.DONE, Task.Status.CANCELED]).count() == 0:
+            return 'Terminado'
+        
+        if self.deadline:
+            today = timezone.now().date()
+            if self.deadline < today:
+                return 'Vencido'
+            elif (self.deadline - today).days <= 7:
+                return 'En Riesgo'
+        
+        return 'En Plazo'
+    
+    @property
+    def progress_percentage(self):
+        """ Calcula el porcentaje de completado del proyecto. """
+        tasks = self.tasks.all()
+        total_tasks = tasks.exclude(status=Task.Status.CANCELED).count()
+        
+        if total_tasks == 0:
+            return 0
+        
+        completed_tasks = tasks.filter(status=Task.Status.DONE).count()
+        percentage = round((completed_tasks / total_tasks) * 100)
+        return percentage
+            
         
     
 class Task(models.Model):
