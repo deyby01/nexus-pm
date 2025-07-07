@@ -147,9 +147,12 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Configuración de Django-Allauth
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False # No pedimos username en el registro
+#ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_LOGIN_METHODS = {'email'}
+#ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+#ACCOUNT_USERNAME_REQUIRED = False # No pedimos username en el registro
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional' # 'mandatory' para producción
 LOGIN_REDIRECT_URL = '/' # A donde ir después del login
 ACCOUNT_LOGOUT_ON_GET = True # Permite logout sin confirmación
