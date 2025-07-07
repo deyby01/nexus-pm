@@ -4,7 +4,7 @@
 <h2>Proyectos</h2>
 <ul>
     {% for project in workspace.projects.all %}
-        <li><a href="{% url 'core:project_detail' workspace_slug=workspace.slug slug=project.slug %}">{{ project.name }}</a> - (Límite: {{ project.deadline|default:"Sin fecha" }})</li>
+        <li><a href="{% url 'core:project_detail' slug=project.slug %}">{{ project.name }}</a> - (Límite: {{ project.deadline|default:"Sin fecha" }})</li>
     {% empty %}
         <li>Este espacio de trabajo aún no tiene proyectos.</li>
     {% endfor %}

@@ -5,6 +5,9 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Workspace, Membership, Project, Task
 from .forms import WorkspaceForm, ProjectForm
+from django.http import HttpResponse, HttpResponseForbidden
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 class WorkspaceListView(LoginRequiredMixin, ListView):
     model = Workspace
@@ -90,4 +93,38 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         # Asegurarnos de que el proyecto pertenezca a un workspace del usuario
         return Project.objects.filter(workspace__members=self.request.user)
+    
+
+@login_required
+@require_POST
+def update_task_status(request):
+    """
+    Actualiza el estado de una tarea.
+    Verifica que el usuario tenga permiso sobre la tarea antes de modificarla.
+    """
+    task_id = request.POST.get('task_id')
+    new_status = request.POST.get('new_status')
+
+    # Validación básica de los datos recibidos
+    valid_statuses = [status[0] for status in Task.Status.choices]
+    if not task_id or new_status not in valid_statuses:
+        return HttpResponse("Datos inválidos.", status=400)
+
+    try:
+        # Buscamos la tarea y verificamos el permiso en una sola consulta
+        task = Task.objects.get(
+            id=task_id,
+            project__workspace__members=request.user
+        )
+        
+        task.status = new_status
+        task.save(update_fields=['status']) # Actualiza solo el campo 'status'
+        
+        # 204 No Content es la respuesta estándar para una petición exitosa sin contenido
+        return HttpResponse(status=204)
+
+    except Task.DoesNotExist:
+        # Si la tarea no existe o el usuario no tiene permiso, es un error de Prohibido
+        return HttpResponseForbidden("No tienes permiso para modificar esta tarea.")
+    
     

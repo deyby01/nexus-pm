@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Workspace, Membership
+from .models import User, Workspace, Membership, Project, Task
 
 
 # Para una mejor visualización, mostraremos los miembros en la pagina del Workspace
@@ -20,3 +20,10 @@ class UserAdmin(admin.ModelAdmin):
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ('user', 'workspace', 'role')
     list_filter = ('workspace', 'role')
+    
+admin.site.register(Project)
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('title', 'description', 'project', 'status')
+    prepopulated_fields = {'slug': ('title',)}

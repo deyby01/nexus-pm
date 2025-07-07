@@ -1,31 +1,82 @@
+{% extends "core/base.html" %}
 {% load core_extras %}
-{% block content %} 
+
+{% block content %}
 <style>
     /* Estilos muy básicos para el Kanban */
     .kanban-board { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; }
     .kanban-column { min-width: 280px; background-color: #f4f5f7; border-radius: 4px; padding: 0.5rem; }
-    .task-card { background-color: #ffffff; border-radius: 3px; box-shadow: 0 1px 0 rgba(9,30,66,.25); padding: 0.75rem; margin-bottom: 0.5rem; }
+    .task-card { background-color: #ffffff; border-radius: 3px; box-shadow: 0 1px 0 rgba(9,30,66,.25); padding: 0.75rem; margin-bottom: 0.5rem; cursor: grab; }
 </style>
 
 <h1>Proyecto: {{ project.name }}</h1>
+<p>{{ project.description|default:"" }}</p>
 <hr>
 
-<div class="kanban-board">
+<div class="kanban-board" data-update-url="{% url 'core:update_task_status' %}">
+
     {% for status_value, status_label in status_choices %}
         <div class="kanban-column">
             <h3>{{ status_label }}</h3>
             <hr>
-            <div class="tasks-container">
+            <div class="tasks-container" id="status-{{ status_value }}" data-status="{{ status_value }}">
+                
                 {% for task in grouped_tasks|get_item:status_value %}
-                    <div class="task-card">
+                    <div class="task-card" id="task-{{ task.id }}">
                         <strong>{{ task.title }}</strong>
                         <p><small>Límite: {{ task.due_date|default:"N/A" }}</small></p>
                     </div>
-                {% empty %}
-                    <p><small>No hay tareas en este estado.</small></p>
                 {% endfor %}
+                
             </div>
         </div>
     {% endfor %}
+
 </div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // Obtenemos el token y la URL una sola vez
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const kanbanBoard = document.querySelector('.kanban-board');
+        const updateUrl = kanbanBoard.dataset.updateUrl;
+
+        const taskContainers = document.querySelectorAll('.tasks-container');
+        
+        taskContainers.forEach(container => {
+            new Sortable(container, {
+                group: 'kanban',
+                animation: 150,
+                ghostClass: 'blue-background-class',
+                
+                onEnd: function (evt) {
+                    const taskCard = evt.item;
+                    const newContainer = evt.to;
+                    
+                    const taskId = taskCard.id.replace('task-', '');
+                    const newStatus = newContainer.dataset.status;
+
+                    const params = {
+                        task_id: taskId,
+                        new_status: newStatus
+                    };
+                    
+                    // ¡LA SOLUCIÓN! Usamos htmx.ajax para enviar la petición POST
+                    // de forma explícita y directa. Esto no puede fallar.
+                    htmx.ajax('POST', updateUrl, {
+                        values: params,
+                        headers: {'X-CSRFToken': csrfToken},
+                        swap: 'none' // No queremos que htmx reemplace ningún HTML
+                    }).then(response => {
+                        console.log(`Tarea ${taskId} movida a ${newStatus}. ¡Guardado!`);
+                    }).catch(error => {
+                        console.error("Error al actualizar la tarea:", error);
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
 {% endblock %}
