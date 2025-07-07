@@ -1,4 +1,9 @@
-<div class="task-card" id="task-{{ task.id }}">
+<div class="task-card"
+     id="task-{{ task.id }}"
+     hx-get="{% url 'core:task_detail_update' pk=task.id %}"
+     hx-target="#modal-container"
+     hx-swap="innerHTML"
+     style="cursor: pointer;">
     <strong>{{ task.title }}</strong>
     <p><small>Límite: {{ task.due_date|default:"N/A" }}</small></p>
 </div>

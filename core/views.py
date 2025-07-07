@@ -147,3 +147,27 @@ def create_task(request, project_slug):
     # Si la petición es GET, devolvemos el formulario vacío para el modal
     form = TaskForm(workspace=project.workspace, initial={'status': 'BACKLOG'})
     return render(request, 'core/_task_form.html', {'form': form, 'project': project})
+
+
+@login_required
+def task_detail_update(request, pk):
+    # Buscamos la tarea y verificamos los permisos del usuario
+    task = get_object_or_404(Task, pk=pk, project__workspace__members=request.user)
+    
+    if request.method == 'POST':
+        form = TaskForm(request.POST, instance=task, workspace=task.project.workspace)
+        if form.is_valid():
+            update_task = form.save()
+            # Devolvemos la tarjeta actualizada para que htmx la reemplace en el tablero
+            return render(request, 'core/_task_card.html', {'task': update_task})
+    else:
+        # si la peticion es GET, mostramos el formulario con los datos de la tarea
+        form = TaskForm(instance=task, workspace=task.project.workspace)
+        
+    context = {
+        'form': form,
+        'task': task,
+    }
+    
+    # Devolvemos el formulario dentro de la estructura del modal.
+    return render(request, 'core/_task_detail_modal.html', context)

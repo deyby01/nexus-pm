@@ -8,6 +8,7 @@ from .views import (
     ProjectDetailView,
     update_task_status,
     create_task,
+    task_detail_update,
 )
 
 app_name = 'core'
@@ -26,6 +27,6 @@ urlpatterns = [
 
     # URL del Endpoint para actualizar tareas
     path('api/tasks/update-status/', update_task_status, name='update_task_status'),
-    
     path('projects/<slug:project_slug>/tasks/create/', create_task, name='task_create'),
+    path('tasks/<int:pk>/', task_detail_update, name='task_detail_update'),
 ]
