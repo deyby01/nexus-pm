@@ -1,0 +1,14 @@
+<div class="list-group-item">
+    <div class="d-flex w-100 justify-content-between">
+        <h6 class="mb-1">{{ comment.author.get_full_name }}</h6>
+        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+    </div>
+    <p class="mb-1">{{ comment.text|linebreaksbr }}</p>
+    {% for attachment in comment.attachments.all %}
+        <small>
+            <a href="{{ attachment.file.url }}" target="_blank">
+                📎 {{ attachment }}
+            </a>
+        </small>
+    {% endfor %}
+</div>

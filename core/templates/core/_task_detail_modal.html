@@ -1,47 +1,41 @@
-<div id="modal-content" class="modal-content">
-    <div class="modal-header">
-        <h2 class="h5 mb-0 fw-semibold text-dark">Editar Tarea</h2>
-        <button 
-            type="button"
-            class="btn-close"
-            aria-label="Cerrar"
-            onclick="document.querySelector('#modal-container').innerHTML = ''"
-            style="margin-left: 1rem;">
-        </button>
-    </div>
-    <div class="modal-body">
-        <form 
-            hx-post="{% url 'core:task_detail_update' pk=task.pk %}"
-            hx-target="#task-{{ task.id }}"
-            hx-swap="outerHTML"
-            autocomplete="off"
-        >
-            {% csrf_token %}
-            <div class="mb-3">
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Editar Tarea</h2>
+            <button type="button" 
+                    onclick="document.querySelector('#modal-overlay').remove()"
+                    class="btn-close" 
+                    aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form hx-post="{% url 'core:task_detail_update' pk=task.pk %}"
+                  hx-target="#task-{{ task.id }}"
+                  hx-swap="outerHTML">
+                
+                {% csrf_token %}
                 {{ form.as_p }}
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button type="submit" class="btn btn-success rounded-pill px-4">Guardar Cambios</button>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="document.querySelector('#modal-container').innerHTML = ''">Cancelar</button>
-            </div>
-        </form>
-    </div>
+            </form>
 
-    <hr class="my-4">
-    <h4>Archivos Adjuntos</h4>
-    
-    <ul id="attachment-list" class="list-group mb-3">
-        {% for attachment in task.attachments.all %}
-            {% include "core/_attachment_item.html" %}
-        {% endfor %}
-    </ul>
-    
-    <form hx-post="{% url 'core:add_attachment' task_pk=task.pk %}"
-          hx-encoding="multipart/form-data"
-          hx-target="#attachment-list"
-          hx-swap="beforeend">
-        {% csrf_token %}
-        {{ attachment_form.as_p }}
-        <button type="submit" class="btn btn-secondary btn-sm mt-2">Subir Archivo</button>
-    </form>
+            <hr class="my-4">
+            <h4>Comentarios</h4>
+            
+            <div id="comment-list" class="list-group mb-3">
+                {% for comment in task.comments.all %}
+                    {% include "core/_comment_item.html" with comment=comment %}
+                {% endfor %}
+            </div>
+            
+            <form hx-post="{% url 'core:add_comment' task_pk=task.pk %}"
+                  hx-encoding="multipart/form-data"
+                  hx-target="#comment-list"
+                  hx-swap="beforeend"
+                  hx-on="htmx:afterRequest: this.reset()">
+                {% csrf_token %}
+                {{ comment_form.as_p }}
+                <button type="submit" class="btn btn-secondary btn-sm mt-2">Enviar Comentario</button>
+            </form>
+        </div>
+    </div>
 </div>

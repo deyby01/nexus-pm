@@ -151,9 +151,20 @@ class Task(models.Model):
         super().save(*args, **kwargs)
         
 
+class Comment(models.Model):
+    """ Representa un comentario en una tarea. """
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f'Comentario de {self.author} en {self.task.title}'
+        
+
 class Attachment(models.Model):
-    """Representa un archivo adjunto a una Tarea."""
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='attachments')
+    """Representa un archivo adjunto a un Comentario."""
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='attachments')
     uploader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     file = models.FileField(upload_to='attachments/%Y/%m/%d/')
     created_at = models.DateTimeField(auto_now_add=True)

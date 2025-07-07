@@ -60,3 +60,11 @@ class AttachmentForm(forms.ModelForm):
         fields = ['file']
         labels = { 'file': '' } # No queremos etiqueta para un look más limpio
         
+        
+class CommentForm(forms.Form):
+    """ Formulario para añadir un comentario y opcionalmente un adjunto. """
+    text = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 2, 'placeholder': 'Escribe tu comentario....'}),
+        label=''
+    )
+    file = forms.FileField(required=False, label='Adjuntar archivo')

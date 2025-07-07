@@ -3,8 +3,8 @@ from django.views.generic import ListView, CreateView, DetailView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership, Project, Task
-from .forms import WorkspaceForm, ProjectForm, TaskForm, AttachmentForm
+from .models import Workspace, Membership, Project, Task, Comment, Attachment
+from .forms import WorkspaceForm, ProjectForm, TaskForm, AttachmentForm, CommentForm
 from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -179,7 +179,7 @@ def task_detail_update(request, pk):
     context = {
         'form': form,
         'task': task,
-        'attachment_form': AttachmentForm()
+        'comment_form': CommentForm()
     }
     
     # Devolvemos el formulario dentro de la estructura del modal.
@@ -188,20 +188,33 @@ def task_detail_update(request, pk):
 
 @login_required
 @require_POST
-def add_attachment(request, task_pk):
+def add_comment(request, task_pk):
     task = get_object_or_404(Task, pk=task_pk, project__workspace__members=request.user)
     
+    # Verificamos si el usuario puede interactuar
     if not can_user_interact_with_project(task.project, request.user):
-        return HttpResponseForbidden("El proyecto esta vencido y no puedes añadir adjuntos.")
-    
-    form = AttachmentForm(request.POST, request.FILES)
+        return HttpResponseForbidden("El proyecto está vencido y no puedes comentar.")
+
+    form = CommentForm(request.POST, request.FILES)
 
     if form.is_valid():
-        attachment = form.save(commit=False)
-        attachment.task = task
-        attachment.uploader = request.user
-        attachment.save()
-        # Devolvemos el HTML del item de la lista para que htmx lo añada
-        return render(request, 'core/_attachment_item.html', {'attachment': attachment})
+        # Primero, creamos el objeto Comment
+        comment = Comment.objects.create(
+            task=task,
+            author=request.user,
+            text=form.cleaned_data['text']
+        )
 
+        # Si el usuario subió un archivo, creamos el objeto Attachment
+        uploaded_file = form.cleaned_data.get('file')
+        if uploaded_file:
+            Attachment.objects.create(
+                comment=comment,
+                uploader=request.user,
+                file=uploaded_file
+            )
+        
+        # Devolvemos el HTML del nuevo comentario para que htmx lo añada
+        return render(request, 'core/_comment_item.html', {'comment': comment})
+    
     return HttpResponse("Error en el formulario.", status=400)
