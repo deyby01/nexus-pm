@@ -1,5 +1,5 @@
 from django import forms
-from .models import Workspace, Project
+from .models import Workspace, Project, Task
 
 class WorkspaceForm(forms.ModelForm):
     class Meta:
@@ -25,3 +25,31 @@ class ProjectForm(forms.ModelForm):
             'description': 'Descripción',
             'deadline': 'Fecha Límite'
         }
+
+
+class TaskForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        # Sacamos el workspace de los argumentos para usarlo despues
+        workspace = kwargs.pop('workspace', None)
+        super().__init__(*args, **kwargs)
+        
+        if workspace:
+            # Filtramos el queryset para que solo muestre miembros del workspace actual
+            self.fields['assignee'].queryset = workspace.members.all()
+
+    class Meta:
+        model = Task
+        fields = ['title', 'description', 'status', 'assignee', 'due_date']
+        widgets = {
+            'due_date': forms.DateInput(attrs={'type': 'date'}),
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+        labels = {
+            'title': 'Título de la Tarea',
+            'description': 'Descripción',
+            'status': 'Estado Inicial',
+            'assignee': 'Asignar a',
+            'due_date': 'Fecha Límite',
+        }
+        
+        

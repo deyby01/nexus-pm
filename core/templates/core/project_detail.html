@@ -11,6 +11,13 @@
 
 <h1>Proyecto: {{ project.name }}</h1>
 <p>{{ project.description|default:"" }}</p>
+
+<button hx-get="{% url 'core:task_create' project_slug=project.slug %}"
+        hx-target="#modal-container"
+        hx-swap="innerHTML">
+    + Añadir Nueva Tarea
+</button>
+<div id="modal-container"></div>
 <hr>
 
 <div class="kanban-board" data-update-url="{% url 'core:update_task_status' %}">
@@ -20,15 +27,11 @@
             <h3>{{ status_label }}</h3>
             <hr>
             <div class="tasks-container" id="status-{{ status_value }}" data-status="{{ status_value }}">
-                
                 {% for task in grouped_tasks|get_item:status_value %}
-                    <div class="task-card" id="task-{{ task.id }}">
-                        <strong>{{ task.title }}</strong>
-                        <p><small>Límite: {{ task.due_date|default:"N/A" }}</small></p>
-                    </div>
+                    {% include "core/_task_card.html" %}  
                 {% endfor %}
-                
             </div>
+
         </div>
     {% endfor %}
 

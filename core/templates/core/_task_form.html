@@ -1,0 +1,13 @@
+<div id="task-form-content">
+    <form hx-post="{% url 'core:task_create' project_slug=project.slug %}"
+          hx-target="#status-{{ form.initial.status }}"
+          hx-swap="beforeend"
+          hx-on="htmx:afterRequest: document.querySelector('#modal-container').innerHTML = ''">
+
+        {% csrf_token %}
+        <h2>Crear Nueva Tarea en {{ project.name }}</h2>
+        {{ form.as_p }}
+        <button type="submit">Guardar Tarea</button>
+        <button type="button" onclick="document.querySelector('#modal-container').innerHTML = ''">Cancelar</button>
+    </form>
+</div>

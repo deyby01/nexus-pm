@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Workspace, Membership, Project, Task
-from .forms import WorkspaceForm, ProjectForm
+from .forms import WorkspaceForm, ProjectForm, TaskForm
 from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -127,4 +127,23 @@ def update_task_status(request):
         # Si la tarea no existe o el usuario no tiene permiso, es un error de Prohibido
         return HttpResponseForbidden("No tienes permiso para modificar esta tarea.")
     
+
+@login_required
+def create_task(request, project_slug):
+    project = get_object_or_404(Project, slug=project_slug, workspace__members=request.user)
     
+    if request.method == 'POST':
+        form = TaskForm(request.POST, workspace=project.workspace)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.project = project
+            # Si el status viene del formulario, lo usamos. Si no, default.
+            if not task.status:
+                task.status = Task.Status.BACKLOG
+            task.save()
+            # Devolvemos la tarjeta de la nueva tarea para que htmx la inserte
+            return render(request, 'core/_task_card.html', {'task': task})
+    
+    # Si la petición es GET, devolvemos el formulario vacío para el modal
+    form = TaskForm(workspace=project.workspace, initial={'status': 'BACKLOG'})
+    return render(request, 'core/_task_form.html', {'form': form, 'project': project})
