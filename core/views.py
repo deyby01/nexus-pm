@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Workspace, Membership, Project, Task
-from .forms import WorkspaceForm, ProjectForm, TaskForm
+from .forms import WorkspaceForm, ProjectForm, TaskForm, AttachmentForm
 from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -168,7 +168,25 @@ def task_detail_update(request, pk):
     context = {
         'form': form,
         'task': task,
+        'attachment_form': AttachmentForm()
     }
     
     # Devolvemos el formulario dentro de la estructura del modal.
     return render(request, 'core/_task_detail_modal.html', context)
+
+
+@login_required
+@require_POST
+def add_attachment(request, task_pk):
+    task = get_object_or_404(Task, pk=task_pk, project__workspace__members=request.user)
+    form = AttachmentForm(request.POST, request.FILES)
+
+    if form.is_valid():
+        attachment = form.save(commit=False)
+        attachment.task = task
+        attachment.uploader = request.user
+        attachment.save()
+        # Devolvemos el HTML del item de la lista para que htmx lo añada
+        return render(request, 'core/_attachment_item.html', {'attachment': attachment})
+
+    return HttpResponse("Error en el formulario.", status=400)

@@ -149,3 +149,15 @@ class Task(models.Model):
                 base_slug = f"{slugify(self.title)}-{shortuuid.uuid()[:4]}"
             self.slug = base_slug
         super().save(*args, **kwargs)
+        
+
+class Attachment(models.Model):
+    """Representa un archivo adjunto a una Tarea."""
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='attachments')
+    uploader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    file = models.FileField(upload_to='attachments/%Y/%m/%d/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        # Retorna solo el nombre del archivo, no la ruta completa
+        return self.file.name.split('/')[-1]

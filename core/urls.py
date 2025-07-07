@@ -9,6 +9,7 @@ from .views import (
     update_task_status,
     create_task,
     task_detail_update,
+    add_attachment,
 )
 
 app_name = 'core'
@@ -29,4 +30,5 @@ urlpatterns = [
     path('api/tasks/update-status/', update_task_status, name='update_task_status'),
     path('projects/<slug:project_slug>/tasks/create/', create_task, name='task_create'),
     path('tasks/<int:pk>/', task_detail_update, name='task_detail_update'),
+    path('tasks/<int:task_pk>/add-attachment/', add_attachment, name='add_attachment'),
 ]

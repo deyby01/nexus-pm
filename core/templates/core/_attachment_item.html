@@ -1,0 +1,4 @@
+<li id="attachment-{{ attachment.id }}" class="list-group-item d-flex justify-content-between align-items-center">
+    <a href="{{ attachment.file.url }}" target="_blank">{{ attachment }}</a>
+    <small class="text-muted">Subido por {{ attachment.uploader.get_full_name }}</small>
+</li>

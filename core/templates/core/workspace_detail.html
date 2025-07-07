@@ -1,45 +1,59 @@
 {% extends "core/base.html" %}
+{% load static %}
 
 {% block content %}
-<h2 class="fw-semibold text-dark mb-4">Proyectos</h2>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 fw-semibold text-dark">Workspace: {{ workspace.name }}</h1>
+        <a href="#addProjectForm" class="btn btn-outline-dark rounded-pill px-4">+ Añadir Nuevo Proyecto</a>
+    </div>
 
-<div class="row">
+    <hr>
+
+    <h2 class="h4 mb-3 fw-semibold text-dark">Proyectos</h2>
+
     {% for project in workspace.projects.all %}
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="project-card status-{{ project.health_status|slugify }} shadow-sm">
-                <div class="progress-circle mb-2" style="background: conic-gradient(#0ea700 {{ project.progress_percentage }}%, #e0e0e0 0); color: #222;">
-                    {{ project.progress_percentage }}%
+        <div class="card mb-3 shadow-sm project-card status-{{ project.health_status|slugify }}">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div>
+                        <h5 class="card-title mb-1 fw-bold">
+                            <a href="{% url 'core:project_detail' slug=project.slug %}" class="text-decoration-none text-dark">
+                                {{ project.name }}
+                            </a>
+                        </h5>
+                        <p class="card-subtitle text-muted mb-2">
+                            <strong>Estado:</strong> {{ project.health_status }} |
+                            <small>Límite: {{ project.deadline|default:"Sin fecha" }}</small>
+                        </p>
+                    </div>
+                    <div class="ms-auto d-flex flex-column align-items-center" style="width: 90px;">
+                        <div class="progress-circle mb-1"
+                             style="background: conic-gradient(#43d854 {{ project.progress_percentage }}%, #e0e0e0 0);">
+                            <span class="progress-text">{{ project.progress_percentage }}%</span>
+                        </div>
+                        <small class="text-muted">Completado</small>
+                    </div>
                 </div>
-                <h3 class="h5 mb-1">
-                    <a href="{% url 'core:project_detail' slug=project.slug %}" class="text-decoration-none text-dark fw-bold">
-                        {{ project.name }}
-                    </a>
-                </h3>
-                <p class="mb-1"><strong>Estado:</strong> <span class="text-muted">{{ project.health_status }}</span></p>
-                <p class="mb-0"><small class="text-secondary">Límite: {{ project.deadline|default:"Sin fecha" }}</small></p>
             </div>
         </div>
     {% empty %}
-        <div class="col-12">
-            <div class="alert alert-light border text-center">
-                Este espacio de trabajo aún no tiene proyectos.
-            </div>
+        <div class="alert alert-info" role="alert">
+            Este espacio de trabajo aún no tiene proyectos. ¡Crea el primero!
         </div>
     {% endfor %}
-</div>
 
-<h3 class="mt-5 mb-3 fw-semibold text-dark text-center">Añadir Nuevo Proyecto</h3>
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <form action="{% url 'core:project_create' workspace_slug=workspace.slug %}" method="post" class="bg-white p-4 rounded shadow-sm border">
-            {% csrf_token %}
-            <div class="mb-3">
+    <hr class="my-4">
+
+    <div id="addProjectForm" class="card">
+        <div class="card-body">
+            <h3 class="card-title fw-semibold text-dark">Añadir Nuevo Proyecto</h3>
+            <form action="{% url 'core:project_create' workspace_slug=workspace.slug %}" method="post" autocomplete="off">
+                {% csrf_token %}
                 {{ project_form.as_p }}
-            </div>
-            <button type="submit" class="btn btn-outline-dark rounded-pill px-4 w-100">
-                <i class="bi bi-plus-lg"></i> Crear Proyecto
-            </button>
-        </form>
+                <button type="submit" class="btn btn-outline-dark rounded-pill px-4 w-100 mt-2">Crear Proyecto</button>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

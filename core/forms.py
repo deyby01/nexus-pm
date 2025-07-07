@@ -1,5 +1,6 @@
 from django import forms
-from .models import Workspace, Project, Task
+from .models import Workspace, Project, Task, Attachment
+
 
 class WorkspaceForm(forms.ModelForm):
     class Meta:
@@ -52,4 +53,10 @@ class TaskForm(forms.ModelForm):
             'due_date': 'Fecha Límite',
         }
         
+    
+class AttachmentForm(forms.ModelForm):
+    class Meta:
+        model = Attachment
+        fields = ['file']
+        labels = { 'file': '' } # No queremos etiqueta para un look más limpio
         

@@ -26,4 +26,22 @@
             </div>
         </form>
     </div>
+
+    <hr class="my-4">
+    <h4>Archivos Adjuntos</h4>
+    
+    <ul id="attachment-list" class="list-group mb-3">
+        {% for attachment in task.attachments.all %}
+            {% include "core/_attachment_item.html" %}
+        {% endfor %}
+    </ul>
+    
+    <form hx-post="{% url 'core:add_attachment' task_pk=task.pk %}"
+          hx-encoding="multipart/form-data"
+          hx-target="#attachment-list"
+          hx-swap="beforeend">
+        {% csrf_token %}
+        {{ attachment_form.as_p }}
+        <button type="submit" class="btn btn-secondary btn-sm mt-2">Subir Archivo</button>
+    </form>
 </div>

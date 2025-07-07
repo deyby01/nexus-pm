@@ -193,3 +193,32 @@ form.bg-white {
     color: #232526;
     cursor: pointer;
 }
+
+
+
+/* Barra de progreso circular minimalista para proyectos */
+.progress-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #222;
+    background: #f8faf8;
+    margin-bottom: 0.2rem;
+    box-shadow: 0 1px 4px rgba(33,37,41,0.04);
+    position: relative;
+}
+.progress-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1em;
+    font-weight: 600;
+    color: #222;
+    letter-spacing: 0.5px;
+}
