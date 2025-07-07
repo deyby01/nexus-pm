@@ -1,7 +1,18 @@
-<h1>Crear Nuevo Espacio de Trabajo</h1>
+{% extends "core/base.html" %}
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Crear Workspace</button>
-</form>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="bg-white p-4 rounded shadow-sm border">
+            <h1 class="h3 mb-4 fw-semibold text-dark text-center">Crear Nuevo Espacio de Trabajo</h1>
+            <form method="post" autocomplete="off">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-outline-dark rounded-pill px-4 w-100 mt-2">
+                    Crear Workspace
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

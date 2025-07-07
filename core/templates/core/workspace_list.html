@@ -1,12 +1,37 @@
-<h1>Mis Espacios de Trabajo</h1>
+{% extends "core/base.html" %}
 
-<a href="{% url 'core:workspace_create' %}">Crear Nuevo Workspace</a>
-<hr>
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0 fw-semibold text-dark">Mis Espacios de Trabajo</h1>
+    <a href="{% url 'core:workspace_create' %}" class="btn btn-outline-dark rounded-pill px-4 shadow-sm">
+        <i class="bi bi-plus-lg"></i> Nuevo Workspace
+    </a>
+</div>
+<hr class="mb-4">
 
-<ul>
+<div class="row">
     {% for workspace in workspaces %}
-        <li><a href="{% url 'core:workspace_detail' slug=workspace.slug %}">{{ workspace.name }}</a> (Dueño: {{ workspace.owner.get_full_name }})</li>
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm h-100 workspace-card border-0 bg-white">
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <a href="{% url 'core:workspace_detail' slug=workspace.slug %}" class="stretched-link text-decoration-none text-dark fw-bold">
+                            {{ workspace.name }}
+                        </a>
+                    </h5>
+                    <p class="card-text mb-1">
+                        <span class="text-muted small">Dueño:</span>
+                        <span class="fw-semibold text-secondary">{{ workspace.owner.get_full_name }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
     {% empty %}
-        <li>Aún no pertences a ningún espacio de trabajo. ¡Crea uno!</li>
+        <div class="col-12">
+            <div class="alert alert-light border text-center">
+                Aún no perteneces a ningún espacio de trabajo. ¡Crea uno!
+            </div>
+        </div>
     {% endfor %}
-</ul>
+</div>
+{% endblock %}

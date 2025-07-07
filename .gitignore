@@ -12,9 +12,6 @@ __pycache__/
 # Archivos de Medios de Django
 /media/
 
-# Archivos estáticos recolectados
-/static/
-
 # Archivos de Sistema Operativo
 .DS_Store
 Thumbs.db

@@ -1,54 +1,45 @@
-<style>
-    /* Estilos para las tarjetas de proyecto y la barra de progreso */
-    .project-card {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        background-color: white;
-    }
-    .progress-circle {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.2em;
-        font-weight: bold;
-        float: right; /* Alinea la barra a la derecha */
-    }
-    /* Clases de colores para la salud del proyecto */
-    .status-En.Plazo { border-left: 5px solid #28a745; }
-    .status-En.Riesgo { border-left: 5px solid #ffc107; }
-    .status-Vencido { border-left: 5px solid #dc3545; }
-    .status-Terminado { border-left: 5px solid #17a2b8; }
-</style>
+{% extends "core/base.html" %}
 
-<h2>Proyectos</h2>
+{% block content %}
+<h2 class="fw-semibold text-dark mb-4">Proyectos</h2>
 
-{% for project in workspace.projects.all %}
-    <div class="project-card status-{{ project.health_status|slugify }}">
-        
-        <div class="progress-circle" style="background: conic-gradient(#4CAF50 {{ project.progress_percentage }}%, #e0e0e0 0);">
-            {{ project.progress_percentage }}%
+<div class="row">
+    {% for project in workspace.projects.all %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="project-card status-{{ project.health_status|slugify }} shadow-sm">
+                <div class="progress-circle mb-2" style="background: conic-gradient(#0ea700 {{ project.progress_percentage }}%, #e0e0e0 0); color: #222;">
+                    {{ project.progress_percentage }}%
+                </div>
+                <h3 class="h5 mb-1">
+                    <a href="{% url 'core:project_detail' slug=project.slug %}" class="text-decoration-none text-dark fw-bold">
+                        {{ project.name }}
+                    </a>
+                </h3>
+                <p class="mb-1"><strong>Estado:</strong> <span class="text-muted">{{ project.health_status }}</span></p>
+                <p class="mb-0"><small class="text-secondary">Límite: {{ project.deadline|default:"Sin fecha" }}</small></p>
+            </div>
         </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-light border text-center">
+                Este espacio de trabajo aún no tiene proyectos.
+            </div>
+        </div>
+    {% endfor %}
+</div>
 
-        <h3>
-            <a href="{% url 'core:project_detail' slug=project.slug %}">
-                {{ project.name }}
-            </a>
-        </h3>
-        <p><strong>Estado:</strong> {{ project.health_status }}</p>
-        <p><small>Límite: {{ project.deadline|default:"Sin fecha" }}</small></p>
+<h3 class="mt-5 mb-3 fw-semibold text-dark text-center">Añadir Nuevo Proyecto</h3>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <form action="{% url 'core:project_create' workspace_slug=workspace.slug %}" method="post" class="bg-white p-4 rounded shadow-sm border">
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ project_form.as_p }}
+            </div>
+            <button type="submit" class="btn btn-outline-dark rounded-pill px-4 w-100">
+                <i class="bi bi-plus-lg"></i> Crear Proyecto
+            </button>
+        </form>
     </div>
-{% empty %}
-    <p>Este espacio de trabajo aún no tiene proyectos.</p>
-{% endfor %}
-
-<h3>Añadir Nuevo Proyecto</h3>
-<form action="{% url 'core:project_create' workspace_slug=workspace.slug %}" method="post">
-    {% csrf_token %}
-    {{ project_form.as_p }}
-    <button type="submit">Crear Proyecto</button>
-</form>
+</div>
+{% endblock %}

@@ -1,50 +1,29 @@
 <div id="modal-content" class="modal-content">
     <div class="modal-header">
-        <h2>Editar Tarea</h2>
+        <h2 class="h5 mb-0 fw-semibold text-dark">Editar Tarea</h2>
         <button 
-                type="button" 
-                hx-get="{% url 'core:task_detail_update' pk=task.pk %}"
-                hx-target="#modal-container"
-                hx-swap="innerHTML"
-                hx-on="htmx:afterRequest: this.closest('#modal-content').remove()"
-                onclick="document.querySelector('#modal-container').innerHTML = ''"
-                style="cursor:pointer;">X
+            type="button"
+            class="btn-close"
+            aria-label="Cerrar"
+            onclick="document.querySelector('#modal-container').innerHTML = ''"
+            style="margin-left: 1rem;">
         </button>
-        
-
     </div>
     <div class="modal-body">
-        <form hx-post="{% url 'core:task_detail_update' pk=task.pk %}"
-              hx-target="#task-{{ task.id }}"
-              hx-swap="outerHTML">
-            
+        <form 
+            hx-post="{% url 'core:task_detail_update' pk=task.pk %}"
+            hx-target="#task-{{ task.id }}"
+            hx-swap="outerHTML"
+            autocomplete="off"
+        >
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Guardar Cambios</button>
+            <div class="mb-3">
+                {{ form.as_p }}
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="submit" class="btn btn-success rounded-pill px-4">Guardar Cambios</button>
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="document.querySelector('#modal-container').innerHTML = ''">Cancelar</button>
+            </div>
         </form>
     </div>
 </div>
-
-<style>
-    .modal-content {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        z-index: 1000;
-        width: 90%;
-        max-width: 500px;
-    }
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
-    }
-</style>

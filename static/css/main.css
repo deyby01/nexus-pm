@@ -1,0 +1,195 @@
+/* Mejoras visuales para el layout general y el footer */
+
+body {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #222;
+}
+
+.navbar,
+footer {
+    background: linear-gradient(90deg, #232526 0%, #414345 100%);
+    color: #fff !important;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link,
+footer {
+    color: #fff !important;
+}
+
+.navbar .nav-link.active,
+.navbar .nav-link:focus,
+.navbar .nav-link:hover {
+    color: #bdbdbd !important;
+}
+
+footer {
+    font-size: 0.95rem;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+    border-top: 1px solid #444;
+}
+
+footer strong {
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+
+/*Workspace List estilo de plantilla --------------------------------------------*/
+
+.workspace-card {
+    border: 1px solid #dee2e6;
+    background: #fff;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    border-radius: 0.75rem;
+}
+.workspace-card:hover {
+    box-shadow: 0 4px 24px rgba(33,37,41,0.10);
+    border-color: #bdbdbd;
+}
+
+.stretched-link {
+    position: relative;
+    z-index: 1;
+}
+
+/* Project Card Minimalista */
+.project-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem 1.25rem 1.25rem 1.25rem;
+    background: #fff;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+    min-height: 180px;
+}
+.project-card:hover {
+    box-shadow: 0 4px 24px rgba(33,37,41,0.10);
+    border-color: #bdbdbd;
+}
+
+/* Barra de progreso circular minimalista */
+.progress-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #222;
+    background: #f8faf8;
+    margin-left: auto;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 4px rgba(33,37,41,0.04);
+}
+
+/* Colores de borde para la salud del proyecto ---------------------------------*/
+.status-en-plazo { border-left: 5px solid #4caf50 !important; }
+.status-en-riesgo { border-left: 5px solid #ffc107 !important; }
+.status-vencido { border-left: 5px solid #dc3545 !important; }
+.status-terminado { border-left: 5px solid #6c757d !important; }
+
+/* Formulario nuevo proyecto */
+form.bg-white {
+    max-width: 480px;
+}
+
+
+
+/* Kanban Board Profesional */
+.kanban-board {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.kanban-column {
+    min-width: 300px;
+    background: #f7f9fb;
+    border-radius: 12px;
+    padding: 1rem 0.75rem;
+    box-shadow: 0 2px 8px rgba(33,37,41,0.06);
+    border: 1px solid #e5e7eb;
+}
+
+.kanban-title {
+    font-weight: 600;
+    color: #232526;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.tasks-container {
+    min-height: 40px;
+}
+
+.task-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(33,37,41,0.07);
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.7rem;
+    cursor: grab;
+    border-left: 4px solid #43d854;
+    transition: box-shadow 0.15s, border-color 0.15s;
+}
+.task-card:hover {
+    box-shadow: 0 4px 16px rgba(33,37,41,0.10);
+    border-color: #0ea700;
+}
+
+.ghost {
+    opacity: 0.5;
+    background: #e0e0e0;
+}
+
+
+
+/* Modal de edición de tarea ----------------------------------- */
+.modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(33,37,41,0.18);
+    z-index: 1000;
+    width: 95%;
+    max-width: 480px;
+    border: 1px solid #e5e7eb;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 1rem;
+    margin-bottom: 1.2rem;
+}
+
+.modal-body {
+    padding: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #888;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.btn-close:hover {
+    opacity: 1;
+    color: #232526;
+    cursor: pointer;
+}
