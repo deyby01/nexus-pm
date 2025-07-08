@@ -6,6 +6,7 @@ import shortuuid
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 
 class User(AbstractUser):
     """ 
@@ -152,6 +153,12 @@ class Task(models.Model):
             self.slug = base_slug
         super().save(*args, **kwargs)
         
+    def get_absolute_url(self):
+        """
+        Devuelve la URL para la vista de detalle del proyecto al que pertenece esta tarea.
+        """
+        return reverse('core:project_detail', kwargs={'slug': self.project.slug})
+    
 
 class Comment(models.Model):
     """ Representa un comentario en una tarea. """

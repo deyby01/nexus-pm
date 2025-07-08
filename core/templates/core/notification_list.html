@@ -4,9 +4,11 @@
     <h1>Notificaciones</h1>
     <div class="list-group">
         {% for notification in notifications %}
-            <a href="#" class="list-group-item list-group-item-action {% if not notification.read %}list-group-item-info{% endif %}">
-                <strong>{{ notification.actor.get_full_name }}</strong> {{ notification.verb }} <strong>"{{ notification.target }}"</strong>.
-                <br><small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+            <a href="{{ notification.target.get_absolute_url }}" class="list-group-item list-group-item-action {% if not notification.read and not forloop.first %}list-group-item-info{% endif %}">
+                <p class="mb-1">
+                    <strong>{{ notification.actor.get_full_name }}</strong> {{ notification.verb }} <strong>"{{ notification.target }}"</strong>.
+                    <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                </p>
             </a>
         {% empty %}
             <div class="list-group-item">No tienes notificaciones.</div>
