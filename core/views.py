@@ -122,11 +122,11 @@ def update_task_status(request):
     Verifica que el usuario tenga permiso sobre la tarea antes de modificarla.
     """
     task_id = request.POST.get('task_id')
-    new_status = request.POST.get('new_status')
+    new_status_key = request.POST.get('new_status')
 
     # Validación básica de los datos recibidos
     valid_statuses = [status[0] for status in Task.Status.choices]
-    if not task_id or new_status not in valid_statuses:
+    if not task_id or new_status_key not in valid_statuses:
         return HttpResponse("Datos inválidos.", status=400)
 
     try:
@@ -139,8 +139,33 @@ def update_task_status(request):
         if not can_user_interact_with_project(task.project, request.user):
             return HttpResponseForbidden("El proyecto esta vencido y no puedes modificarlo.")
         
-        task.status = new_status
+        # Guardamos el estado anterior para la notificacion
+        old_status_label = task.get_status_display()
+        
+        task.status = new_status_key
         task.save(update_fields=['status']) # Actualiza solo el campo 'status'
+        
+        # Logica notificacion
+        # Obtenemos la etiqueta legible del nuevo estado
+        new_status_label = task.get_status_display()
+        
+        # Creamos el conjunto de destinatarios
+        recipients = set()
+        if task.assignee:
+            recipients.add(task.assignee)
+        recipients.add(task.project.workspace.owner)
+        
+        # Nos aseguramos de no notificar a quien hizo el cambio
+        recipients.discard(request.user)
+        # Creamos una notificacion para cada usuario en el conjunto
+        for user in recipients:
+            Notification.objects.create(
+                recipient=user,
+                actor=request.user,
+                verb=f'cambió el estado de "{old_status_label}" a "{new_status_label}" en la tarea',
+                target=task,
+            )
+        # fin logica notificacion
         
         # 204 No Content es la respuesta estándar para una petición exitosa sin contenido
         return HttpResponse(status=204)
@@ -166,6 +191,19 @@ def create_task(request, project_slug):
             if not task.status:
                 task.status = Task.Status.BACKLOG
             task.save()
+            
+            # Logica de notificacion
+            if task.assignee is not None:
+                # Nos aseguramos de no notificar al autor de la tarea
+                if task.assignee != request.user:
+                    Notification.objects.create(
+                        recipient=task.assignee,
+                        actor=request.user,
+                        verb='te asignó la tarea',
+                        target=task
+                    )
+            # Fin de la logica de notificacion
+            
             # Devolvemos la tarjeta de la nueva tarea para que htmx la inserte
             return render(request, 'core/_task_card.html', {'task': task})
     
@@ -179,6 +217,9 @@ def task_detail_update(request, pk):
     # Buscamos la tarea y verificamos los permisos del usuario
     task = get_object_or_404(Task, pk=pk, project__workspace__members=request.user)
     
+    # Guardamos el asignado original ANTES de procesar el formulario
+    old_assignee = task.assignee
+    
     if request.method == 'POST':
         if not can_user_interact_with_project(task.project, request.user):
             return HttpResponseForbidden("El proyecto esta vencido y no puedes editar la tarea.")
@@ -186,6 +227,19 @@ def task_detail_update(request, pk):
         form = TaskForm(request.POST, instance=task, workspace=task.project.workspace)
         if form.is_valid():
             update_task = form.save()
+            
+            # Logica de notificacion de asignacion
+            new_assignee = update_task.assignee
+            if new_assignee != old_assignee and new_assignee is not None:
+                # nos aseguramos de no notificar al autor del cambio
+                Notification.objects.create(
+                    recipient=new_assignee,
+                    actor=request.user,
+                    verb='te asignó la tarea',
+                    target=update_task
+                )
+            # Fin de la logica de notificacion
+            
             # Devolvemos la tarjeta actualizada para que htmx la reemplace en el tablero
             return render(request, 'core/_task_card.html', {'task': update_task})
     else:
