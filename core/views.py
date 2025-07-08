@@ -80,6 +80,17 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         project = self.get_object()
         
+        #--- Logica de Filtrado ----
+        # Obtenemos el parametro del filtro desde la URL
+        filter_by = self.request.GET.get('filter_by')
+        context['active_filter'] = filter_by
+        # Empezamos con todas las tareas del proyecto
+        tasks = project.tasks.all()
+        # Si el filtro es 'my_tasks', filtramos el queryset
+        if filter_by == 'my_tasks':
+            tasks = tasks.filter(assignee=self.request.user)
+        #----- Fin de la Logica de Filtrado -----
+        
         # Obtenemos todas las tareas y las agrupamos por estado
         tasks = project.tasks.all()
         grouped_tasks = {status: [] for status, label in Task.Status.choices}

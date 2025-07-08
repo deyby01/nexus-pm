@@ -19,9 +19,20 @@
         + Añadir Nueva Tarea
     </button>
 </div>
-{% endif %}
+<div class="btn-group mt-3" role="group" aria-label="Filtros de tareas">
+    <a href="{% url 'core:project_detail' slug=project.slug %}" 
+       class="btn {% if not active_filter %}btn-primary{% else %}btn-outline-primary{% endif %}">
+       Todas las Tareas
+    </a>
+    <a href="?filter_by=my_tasks" 
+       class="btn {% if active_filter == 'my_tasks' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+       Mis Tareas
+    </a>
+</div>
+
 <div id="modal-container"></div>
 <hr class="mb-4">
+{% endif %}
 
 <div class="row">
     <div class="col-lg-4 mb-4">
