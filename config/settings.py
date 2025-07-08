@@ -32,6 +32,8 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'core.User'
 
+ACCOUNT_SIGNUP_FORM_CLASS = 'core.forms.CustomSignupForm'
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -68,7 +70,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

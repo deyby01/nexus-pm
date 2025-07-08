@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <h1 class="display-4 fw-bold">Bienvenido a Nexus PM</h1>
+    <p class="lead col-lg-6 mx-auto text-muted">Tu nueva plataforma para gestionar proyectos, tareas y equipos de forma sencilla y colaborativa.</p>
+
+    <div class="my-5">
+        <h2 class="h4">¿Quieres empezar a organizar tu trabajo?</h2>
+        <p>Crea tus propios espacios de trabajo y comienza a añadir proyectos en minutos.</p>
+        <a href="{% url 'account_login' %}" class="btn btn-primary btn-lg rounded-pill px-4">¡Empezar ahora!</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row text-center">
+        <div class="col-lg-4">
+            <i class="bi bi-kanban-fill fs-1 text-primary"></i>
+            <h3 class="fw-normal mt-3">Tableros Kanban</h3>
+            <p>Visualiza el flujo de trabajo de tu equipo y mueve tareas con facilidad.</p>
+        </div>
+        <div class="col-lg-4">
+            <i class="bi bi-chat-dots-fill fs-1 text-primary"></i>
+            <h3 class="fw-normal mt-3">Colaboración Real</h3>
+            <p>Comenta, adjunta archivos y recibe notificaciones para estar siempre al día.</p>
+        </div>
+        <div class="col-lg-4">
+            <i class="bi bi-graph-up-arrow fs-1 text-primary"></i>
+            <h3 class="fw-normal mt-3">Visualiza tu Progreso</h3>
+            <p>Con gráficos y reportes de salud del proyecto, toma mejores decisiones.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

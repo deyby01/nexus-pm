@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+{% load socialaccount %} {% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <h1 class="card-title text-center mb-4">Iniciar Sesión</h1>
+                    
+                    <form class="login" method="POST" action="{% url 'account_login' %}">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-grid">
+                            <button class="btn btn-primary" type="submit">Iniciar Sesión</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center text-muted">o</div>
+                    <hr>
+                    
+                    <div class="d-grid gap-2 mb-4">
+                        <a class="btn btn-danger" href="{% provider_login_url 'google' %}">
+                            <i class="bi bi-google"></i> Continuar con Google
+                        </a>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

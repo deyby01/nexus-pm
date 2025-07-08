@@ -75,3 +75,17 @@ class InvitationForm(forms.Form):
         label="Email del invitado",
         widget=forms.EmailInput(attrs={'placeholder': 'tunombre@email.com', 'class': 'form-control'})
     )
+    
+    
+class CustomSignupForm(forms.Form):
+    first_name = forms.CharField(max_length=30, label='Nombre')
+    last_name = forms.CharField(max_length=30, label='Apellido')
+    
+    def signup(self, request, user):
+        """ 
+        Metodo requerido por allauth para guardar los datos adicionales
+        """
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        user.save()
+        return user

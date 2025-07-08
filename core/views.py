@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.views.generic import ListView, CreateView, DetailView
+from django.views.generic import ListView, CreateView, DetailView, TemplateView
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -11,6 +11,8 @@ from django.contrib.auth.decorators import login_required
 from .utils import can_user_interact_with_project
 from django.contrib import messages
 
+class LandingPageView(TemplateView):
+    template_name = 'core/landing_page.html'
 
 class WorkspaceListView(LoginRequiredMixin, ListView):
     model = Workspace
