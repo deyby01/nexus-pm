@@ -10,7 +10,8 @@
         <div class="modal-body">
             <form hx-post="{% url 'core:task_detail_update' pk=task.pk %}"
                   hx-target="#task-{{ task.id }}"
-                  hx-swap="outerHTML">
+                  hx-swap="outerHTML"
+                  hx-on="htmx:afterOnLoad: this.closest('.modal-overlay').remove()">
                 
                 {% csrf_token %}
                 {{ form.as_p }}

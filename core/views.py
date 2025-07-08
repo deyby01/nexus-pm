@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from .utils import can_user_interact_with_project
 from django.contrib import messages
+from django.db.models import Q
 
 class LandingPageView(TemplateView):
     template_name = 'core/landing_page.html'
@@ -167,6 +168,18 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         project = self.get_object()
         
+        #----- Logica de busqueda ------
+        search_query = self.request.GET.get('q', '')
+        context['search_query'] = search_query
+        
+        tasks = project.tasks.all()
+        if search_query:
+            tasks = tasks.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+        # ----- Fin de la Logica de busqueda ------
+        
         #--- Logica de Filtrado ----
         # Obtenemos el parametro del filtro desde la URL
         filter_by = self.request.GET.get('filter_by')
@@ -205,7 +218,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         # Fin de la logica del grafico
         
         # Añadimos las actividades al contexto
-        context['activities'] = self.get_object().activities.all()[:15] # Mostramos las 15 más recientes
+        context['activities'] = self.get_object().activities.all()[:5] # Mostramos las 15 más recientes
         
         context['is_locked'] = not can_user_interact_with_project(project, self.request.user)
         return context
@@ -434,12 +447,20 @@ def add_comment(request, task_pk):
 class NotificationListView(LoginRequiredMixin, ListView):
     model = Notification
     template_name = 'core/notification_list.html'
-    content_type_name = 'notifications'
+    context_object_name = 'notifications'
     paginate_by = 20
-    
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Este método se ejecuta ANTES que get_queryset.
+        Es el lugar perfecto para realizar la acción de marcar como leído.
+        """
+        # Actualizamos todas las notificaciones no leídas del usuario a 'leído'.
+        request.user.notifications.filter(read=False).update(read=True)
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
-        # Marcar las no leidas como leidas al cargar la pagina
-        unread_notifications = self.request.user.notifications.filter(read=False)
-        unread_notifications.update(read=True)
-        # Devolver todas las notificaciones
+        """
+        Ahora este método solo tiene una responsabilidad: obtener la lista.
+        """
         return self.request.user.notifications.all()

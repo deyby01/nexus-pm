@@ -5,5 +5,10 @@
      hx-swap="innerHTML"
      style="cursor: pointer;">
     <strong>{{ task.title }}</strong>
-    <p><small>Límite: {{ task.due_date|default:"N/A" }}</small></p>
+    {% if task.assignee %}
+        <p class="mb-1 mt-2 text-muted">
+            <small><li class="bi bi-person-circle"></li>{{ task.assignee.get_full_name }}</small>
+        </p>
+    {% endif %}
+    <p class="mb-0"><small>Límite: {{ task.due_date|default:"N/A" }}</small></p>
 </div>
