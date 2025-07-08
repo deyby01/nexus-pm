@@ -32,8 +32,27 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-8">
-        <div class="kanban-board"></div>
+</div>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-body">
+        <h5 class="card-title">Actividad Reciente</h5>
+        <ul class="list-group list-group-flush">
+            {% for activity in activities %}
+                <li class="list-group-item">
+                    <small>
+                        <strong>{{ activity.actor.get_full_name }}</strong>
+                        {{ activity.verb }}
+                        {% if activity.target %}
+                            <strong>"{{ activity.target }}"</strong>
+                        {% endif %}
+                        <span class="text-muted d-block">{{ activity.created_at|timesince }} ago</span>
+                    </small>
+                </li>
+            {% empty %}
+                <li class="list-group-item">No hay actividad reciente en este proyecto.</li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
 
@@ -53,6 +72,9 @@
 {% endblock %}
 
 {% block extra_js %}
+    {% if not is_locked %}
+        <script src="{% static 'js/kanban.js' %}"></script>
+    {% endif %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const ctx = document.getElementById('taskStatusChart');
@@ -95,7 +117,4 @@
             });
         });
     </script>
-    {% if not is_locked %}
-        <script src="{% static 'js/kanban.js' %}"></script>
-    {% endif %}
 {% endblock %}

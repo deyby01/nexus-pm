@@ -1,7 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const kanbanBoard = document.querySelector('.kanban-board');
-    if (!kanbanBoard) return;
+    // --- INICIO DEL CÓDIGO DE DEPURACIÓN ---
+    console.log("Elemento .kanban-board encontrado:", kanbanBoard);
+    if (kanbanBoard) {
+        console.log("URL leída desde data-update-url:", kanbanBoard.dataset.updateUrl);
+    } else {
+        console.error("¡ERROR CRÍTICO! No se pudo encontrar el elemento <div class='kanban-board'>");
+    }
+    // --- FIN DE LA DEPURACIÓN ---
     const updateUrl = kanbanBoard.dataset.updateUrl;
     const taskContainers = document.querySelectorAll('.tasks-container');
 

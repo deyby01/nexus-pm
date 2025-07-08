@@ -203,3 +203,25 @@ class Notification(models.Model):
         # Manejar el caso de que el target haya sido eliminado
         target_str = str(self.target) if self.target else 'Un Objeto Eliminado'
         return f'{self.actor} {self.verb} {target_str}'
+    
+
+class Activity(models.Model):
+    """Representa una acción realizada dentro de un proyecto."""
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities')
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    verb = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Opcional: un target genérico para saber sobre qué objeto se actuó
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    target = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = "Activities" # Corrige el plural en el admin de Django
+
+    def __str__(self):
+        if self.target:
+            return f'{self.actor} {self.verb} {self.target}'
+        return f'{self.actor} {self.verb}'

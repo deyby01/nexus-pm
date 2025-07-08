@@ -3,7 +3,7 @@ from django.views.generic import ListView, CreateView, DetailView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification
+from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity
 from .forms import WorkspaceForm, ProjectForm, TaskForm, AttachmentForm, CommentForm
 from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
@@ -106,6 +106,9 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context['chart_data'] = chart_data
         # Fin de la logica del grafico
         
+        # Añadimos las actividades al contexto
+        context['activities'] = self.get_object().activities.all()[:15] # Mostramos las 15 más recientes
+        
         context['is_locked'] = not can_user_interact_with_project(project, self.request.user)
         return context
     
@@ -148,6 +151,11 @@ def update_task_status(request):
         # Logica notificacion
         # Obtenemos la etiqueta legible del nuevo estado
         new_status_label = task.get_status_display()
+        
+        # Logica de actividad
+        verb_text = f'cambió el estado de "{old_status_label}" a "{new_status_label}" en la tarea'
+        Activity.objects.create(project=task.project, actor=request.user, verb=verb_text, target=task)
+        # Fin logica actividad
         
         # Creamos el conjunto de destinatarios
         recipients = set()
@@ -192,6 +200,11 @@ def create_task(request, project_slug):
                 task.status = Task.Status.BACKLOG
             task.save()
             
+            # Logica de actividad
+            verb_text = f'creó la tarea "{task.title}"'
+            Activity.objects.create(project=project, actor=request.user, verb=verb_text, target=task)
+            # Fin logica actividad
+            
             # Logica de notificacion
             if task.assignee is not None:
                 # Nos aseguramos de no notificar al autor de la tarea
@@ -227,6 +240,11 @@ def task_detail_update(request, pk):
         form = TaskForm(request.POST, instance=task, workspace=task.project.workspace)
         if form.is_valid():
             update_task = form.save()
+            
+            # Logica de actividad
+            verb_text = f'actualizó la tarea "{update_task.title}"'
+            Activity.objects.create(project=task.project, actor=request.user, verb=verb_text, target=update_task)
+            # Fin logica actividad
             
             # Logica de notificacion de asignacion
             new_assignee = update_task.assignee
@@ -274,6 +292,11 @@ def add_comment(request, task_pk):
             author=request.user,
             text=form.cleaned_data['text']
         )
+        
+        # Logica de actividad
+        verb_text = 'comentó en la tarea'
+        Activity.objects.create(project=task.project, actor=request.user, verb=verb_text, target=task)
+        # Fin logica actividad
         
         # Logica notificacion
         # Creamos un conjunto de usuarios a notificar para evitar duplicados
