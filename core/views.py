@@ -19,9 +19,15 @@ class WorkspaceListView(LoginRequiredMixin, ListView):
     template_name = 'core/workspace_list.html'
     context_object_name = 'workspaces'
     
-    def get_queryset(self):
-        return self.request.user.workspaces.all()
-    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        # Obtenemos los workspaces donde el usuario es el dueño
+        context['owned_workspaces'] = Workspace.objects.filter(owner=user)
+        # Obtenemos los workspaces donde el usuario es miembro, pero no el dueño
+        context['shared_workspaces'] = user.workspaces.exclude(owner=user)
+        return context
 
 class WorkspaceCreateView(LoginRequiredMixin, CreateView):
     model = Workspace
