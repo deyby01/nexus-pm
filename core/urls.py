@@ -10,6 +10,8 @@ from .views import (
     create_task,
     task_detail_update,
     add_comment, NotificationListView,
+    WorkspaceManageView,
+    send_invitation, accept_invitation,
 )
 
 app_name = 'core'
@@ -32,5 +34,11 @@ urlpatterns = [
     path('projects/<slug:project_slug>/tasks/create/', create_task, name='task_create'),
     path('tasks/<int:pk>/', task_detail_update, name='task_detail_update'),
     path('tasks/<int:task_pk>/add-comment/', add_comment, name='add_comment'),
+    
+    path('<slug:slug>/manage/', WorkspaceManageView.as_view(), name='workspace_manage'),
+    path('<slug:workspace_slug>/invite/', send_invitation, name='send_invitation'),
+    
+    # Aceptacion de invitaciones (la creare despues)
+    path('invitations/accept/<uuid:token>/', accept_invitation, name='accept_invitation'),
     
 ]

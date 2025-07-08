@@ -7,6 +7,9 @@
         <h1 class="h2 fw-semibold text-dark">Workspace: {{ workspace.name }}</h1>
         <a href="#addProjectForm" class="btn btn-outline-dark rounded-pill px-4">+ Añadir Nuevo Proyecto</a>
     </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'core:workspace_manage' slug=workspace.slug %}" class="btn btn-outline-secondary">Gestionar Equipo</a>
+    </div>
 
     <hr>
 

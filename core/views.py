@@ -1,15 +1,16 @@
 from django.shortcuts import render
 from django.views.generic import ListView, CreateView, DetailView
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity
-from .forms import WorkspaceForm, ProjectForm, TaskForm, AttachmentForm, CommentForm
+from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation
+from .forms import WorkspaceForm, ProjectForm, TaskForm, CommentForm, InvitationForm
 from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from django.utils import timezone
 from .utils import can_user_interact_with_project
+from django.contrib import messages
+
 
 class WorkspaceListView(LoginRequiredMixin, ListView):
     model = Workspace
@@ -55,6 +56,84 @@ class WorkspaceDetailView(LoginRequiredMixin, DetailView):
         # Asegurarnos que el usuario solo puede ver workspaces a los que pertenece
         return self.request.user.workspaces.all()
     
+    
+class WorkspaceManageView(LoginRequiredMixin, DetailView):
+    model = Workspace
+    template_name = 'core/workspace_manage.html'
+    context_object_name = 'workspace'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificacion de permiso: solo el dueño puede acceder
+        workspace = self.get_object()
+        if workspace.owner != request.user:
+            messages.error(request, 'No tienes permiso para gestionar este equipo.')
+            return redirect('core:workspace_detail', slug=workspace.slug)
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['invitation_form'] = InvitationForm()
+        return context
+    
+
+@login_required
+@require_POST
+def send_invitation(request, workspace_slug):
+    workspace = get_object_or_404(Workspace, slug=workspace_slug, owner=request.user)
+    form = InvitationForm(request.POST)
+    if form.is_valid():
+        email = form.cleaned_data['email']
+        # Verificar si el usuario ya es miembro 
+        if workspace.members.filter(email=email).exists():
+            messages.warning(request, f'El usuario con el email {email} ya es un miembro de este equipo.')
+            return redirect('core:workspace_manage', slug=workspace_slug)
+        
+        invitation = Invitation.objects.create(
+            workspace=workspace,
+            sender=request.user,
+            email=email
+        )
+        # Por ahora, imprimiremos el enlace en la consola en lugar de enviar un email
+        invitation_url = request.build_absolute_uri(
+            reverse('core:accept_invitation', kwargs={'token': invitation.token})
+        )
+        print("=========== ENLACE DE INVITACIÓN (SIMULACIÓN DE EMAIL) ===========")
+        print(invitation_url)
+        print("==================================================================")
+        
+        messages.success(request, f'Se ha enviado una invitación a {email}.')
+        return redirect('core:workspace_manage', slug=workspace.slug)
+    # Si el fomulario no es valido, volvemos a renderizar la pagina
+    return redirect('core:workspace_manage', slug=workspace.slug)
+
+
+@login_required
+def accept_invitation(request, token):
+    # Buscamos una invitacion que coincida con el token y que no haya sido aceptada aun
+    invitation = get_object_or_404(Invitation, token=token, accepted=False)
+    
+    workspace = invitation.workspace
+    user = request.user
+    
+    # Verificamos si el usuario ya es miembro para no añadirlo 2 veces
+    if workspace.members.filter(id=user.id).exists():
+        messages.warning(request, 'Ya eres miembro de este equipo.')
+        return redirect('core:workspace_detail', slug=workspace.slug)
+    
+    # Si todo esta en orden añadimos al usuario al equipo
+    verb_text = f'Se unió al equipo "{workspace.name}"'
+    Activity.objects.create(project=None, actor=user, verb=verb_text)
+    
+    # Notificamos al dueño del workspace
+    Notification.objects.create(
+        recipient=workspace.owner,
+        actor=user,
+        verb='acepto tu invitación para unirse al equipo',
+        target=workspace
+    )
+    
+    messages.success(request, f'¡Bienvenido! Has sido añadido al equipo "{workspace.name}".')
+    return redirect('core:workspace_detail', slug=workspace.slug)
 
 class ProjectCreateView(LoginRequiredMixin, CreateView):
     model = Project

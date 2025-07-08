@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+import uuid
 
 class User(AbstractUser):
     """ 
@@ -225,3 +226,17 @@ class Activity(models.Model):
         if self.target:
             return f'{self.actor} {self.verb} {self.target}'
         return f'{self.actor} {self.verb}'
+    
+    
+class Invitation(models.Model):
+    " Guarda una invitacion para unirse a un workspace. "
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='invitations')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_invitations')
+    email = models.EmailField()
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    is_accepted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        status = "Aceptada" if self.is_accepted else "Pendiente"
+        return f'Invitación para {self.email} a {self.workspace.name} ({status})'

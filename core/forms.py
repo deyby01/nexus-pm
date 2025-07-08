@@ -1,5 +1,5 @@
 from django import forms
-from .models import Workspace, Project, Task, Attachment
+from .models import Workspace, Project, Task, Attachment, Invitation
 
 
 class WorkspaceForm(forms.ModelForm):
@@ -68,3 +68,10 @@ class CommentForm(forms.Form):
         label=''
     )
     file = forms.FileField(required=False, label='Adjuntar archivo')
+    
+    
+class InvitationForm(forms.Form):
+    email = forms.EmailField(
+        label="Email del invitado",
+        widget=forms.EmailInput(attrs={'placeholder': 'tunombre@email.com', 'class': 'form-control'})
+    )
