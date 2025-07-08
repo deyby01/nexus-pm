@@ -23,6 +23,20 @@
 <div id="modal-container"></div>
 <hr class="mb-4">
 
+<div class="row">
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Resumen de Tareas</h5>
+                <canvas id="taskStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="kanban-board"></div>
+    </div>
+</div>
+
 <div class="kanban-board" data-update-url="{% url 'core:update_task_status' %}">
     {% for status_value, status_label in status_choices %}
         <div class="kanban-column">
@@ -39,6 +53,48 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('taskStatusChart');
+
+            // Pasamos los datos desde el contexto de Django a JavaScript
+            const labels = {{ chart_labels|safe }};
+            const data = {{ chart_data|safe }};
+
+            new Chart(ctx, {
+                type: 'pie', // Tipo de gráfico
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Nº de Tareas',
+                        data: data,
+                        backgroundColor: [ // Colores de ejemplo
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderColor: 'rgba(255, 255, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false,
+                            text: 'Distribución de Tareas por Estado'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
     {% if not is_locked %}
         <script src="{% static 'js/kanban.js' %}"></script>
     {% endif %}

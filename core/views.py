@@ -90,6 +90,22 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         # Añadimos las tareas agrupadas y los estados al contexto
         context['grouped_tasks'] = grouped_tasks
         context['status_choices'] = Task.Status.choices
+        
+        # Nueva logica para el grafico
+        chart_labels = []
+        chart_data = []
+        # Iteramos sobre los estados para mantener el order
+        for status_value, status_label in Task.Status.choices:
+            count = len(grouped_tasks[status_value])
+            # Solo añadimos al grafico si hay tareas en ese estado
+            if count > 0:
+                chart_labels.append(status_label)
+                chart_data.append(count)
+                
+        context['chart_labels'] = chart_labels
+        context['chart_data'] = chart_data
+        # Fin de la logica del grafico
+        
         context['is_locked'] = not can_user_interact_with_project(project, self.request.user)
         return context
     
