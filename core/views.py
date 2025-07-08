@@ -3,7 +3,7 @@ from django.views.generic import ListView, CreateView, DetailView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership, Project, Task, Comment, Attachment
+from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification
 from .forms import WorkspaceForm, ProjectForm, TaskForm, AttachmentForm, CommentForm
 from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
@@ -204,6 +204,25 @@ def add_comment(request, task_pk):
             author=request.user,
             text=form.cleaned_data['text']
         )
+        
+        # Logica notificacion
+        # Creamos un conjunto de usuarios a notificar para evitar duplicados
+        recipients = set()
+        # Añadimos a la persona a la tarea si existe
+        if task.assignee:
+            recipients.add(task.assignee)
+        # Añadimos al dueño del workspace
+        recipients.add(task.project.workspace.owner)
+        # Nos aseguramos de no hacer la notificacion al autor del comentario
+        recipients.discard(request.user)
+        # Creamos una notificación para cada usuario en el conjunto
+        for user in recipients:
+            Notification.objects.create(
+                recipient=user,
+                actor=request.user,
+                verb='comentó en la tarea',
+                target=task
+            )
 
         # Si el usuario subió un archivo, creamos el objeto Attachment
         uploaded_file = form.cleaned_data.get('file')
@@ -218,3 +237,18 @@ def add_comment(request, task_pk):
         return render(request, 'core/_comment_item.html', {'comment': comment})
     
     return HttpResponse("Error en el formulario.", status=400)
+
+
+
+class NotificationListView(LoginRequiredMixin, ListView):
+    model = Notification
+    template_name = 'core/notification_list.html'
+    content_type_name = 'notifications'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        # Marcar las no leidas como leidas al cargar la pagina
+        unread_notifications = self.request.user.notifications.filter(read=False)
+        unread_notifications.update(read=True)
+        # Devolver todas las notificaciones
+        return self.request.user.notifications.all()

@@ -4,6 +4,8 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.text import slugify
 import shortuuid
 from django.utils import timezone
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 class User(AbstractUser):
     """ 
@@ -172,3 +174,25 @@ class Attachment(models.Model):
     def __str__(self):
         # Retorna solo el nombre del archivo, no la ruta completa
         return self.file.name.split('/')[-1]
+    
+    
+class Notification(models.Model):
+    """ Representa una notificacion para un usuario. """
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='actions')
+    verb = models.CharField(max_length=255)
+    read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Campos para el Generic Foreign Key
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    target = GenericForeignKey('content_type', 'object_id')
+    
+    class Meta:
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        # Manejar el caso de que el target haya sido eliminado
+        target_str = str(self.target) if self.target else 'Un Objeto Eliminado'
+        return f'{self.actor} {self.verb} {target_str}'

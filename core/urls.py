@@ -9,7 +9,7 @@ from .views import (
     update_task_status,
     create_task,
     task_detail_update,
-    add_comment,
+    add_comment, NotificationListView,
 )
 
 app_name = 'core'
@@ -18,6 +18,7 @@ urlpatterns = [
     # URLs de Workspaces
     path('', WorkspaceListView.as_view(), name='workspace_list'),
     path('create/', WorkspaceCreateView.as_view(), name='workspace_create'),
+    path('notifications/', NotificationListView.as_view(), name='notification_list'),
     path('<slug:slug>/', WorkspaceDetailView.as_view(), name='workspace_detail'),
 
     # URLs de Proyectos (anidadas para la creación)
@@ -31,4 +32,5 @@ urlpatterns = [
     path('projects/<slug:project_slug>/tasks/create/', create_task, name='task_create'),
     path('tasks/<int:pk>/', task_detail_update, name='task_detail_update'),
     path('tasks/<int:task_pk>/add-comment/', add_comment, name='add_comment'),
+    
 ]
