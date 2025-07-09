@@ -13,12 +13,14 @@
         </div>
         {% if not is_locked %}
         <div class="d-flex gap-2">
+            {% if project.owner == request.user %}
             <button hx-get="{% url 'core:task_create' project_slug=project.slug %}"
                     hx-target="#modal-container"
                     hx-swap="innerHTML"
                     class="btn btn-success rounded-pill px-4 fw-semibold shadow-sm">
                 <i class="bi bi-plus-lg me-1"></i>Nueva Tarea
             </button>
+            {% endif %}
         </div>
         {% endif %}
     </div>
@@ -107,6 +109,12 @@
             </div>
         {% endfor %}
     </div>
+    <hr>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'core:workspace_detail' slug=project.workspace.slug %}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-1"></i>Volver al Espacio de Trabajo
+        </a>
 </div>
 {% endblock %}
 

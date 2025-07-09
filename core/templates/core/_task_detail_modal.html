@@ -15,7 +15,9 @@
                 
                 {% csrf_token %}
                 {{ form.as_p }}
+                {% if can_edit %}
                 <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                {% endif %}
                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="document.querySelector('#modal-container').innerHTML = ''">Cancelar</button>
             </form>
 

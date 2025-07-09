@@ -181,10 +181,9 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         project = self.get_object()
         
         #----- Logica de busqueda ------
-        search_query = self.request.GET.get('q', '')
-        context['search_query'] = search_query
-        
         tasks = project.tasks.all()
+        search_query = self.request.GET.get('q', '')
+        
         if search_query:
             tasks = tasks.filter(
                 Q(title__icontains=search_query) |
@@ -195,16 +194,13 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         #--- Logica de Filtrado ----
         # Obtenemos el parametro del filtro desde la URL
         filter_by = self.request.GET.get('filter_by')
-        context['active_filter'] = filter_by
-        # Empezamos con todas las tareas del proyecto
-        tasks = project.tasks.all()
         # Si el filtro es 'my_tasks', filtramos el queryset
         if filter_by == 'my_tasks':
             tasks = tasks.filter(assignee=self.request.user)
+        context['active_filter'] = filter_by
+        context['search_query'] = search_query
         #----- Fin de la Logica de Filtrado -----
         
-        # Obtenemos todas las tareas y las agrupamos por estado
-        tasks = project.tasks.all()
         grouped_tasks = {status: [] for status, label in Task.Status.choices}
         
         for task in tasks:
@@ -350,50 +346,36 @@ def create_task(request, project_slug):
 
 @login_required
 def task_detail_update(request, pk):
-    # Buscamos la tarea y verificamos los permisos del usuario
     task = get_object_or_404(Task, pk=pk, project__workspace__members=request.user)
     
-    # Guardamos el asignado original ANTES de procesar el formulario
-    old_assignee = task.assignee
-    
+    # Define quién puede editar: el dueño del workspace o la persona asignada a la tarea
+    can_edit = (request.user == task.project.workspace.owner or request.user == task.assignee)
+
     if request.method == 'POST':
         if not can_user_interact_with_project(task.project, request.user):
-            return HttpResponseForbidden("El proyecto esta vencido y no puedes editar la tarea.")
+            return HttpResponseForbidden("El proyecto está vencido y no puedes editar la tarea.")
         
+        # Solo procesa el formulario si el usuario tiene permiso de edición
+        if not can_edit:
+            return HttpResponseForbidden("No tienes permiso para editar los detalles de esta tarea.")
+
         form = TaskForm(request.POST, instance=task, workspace=task.project.workspace)
         if form.is_valid():
-            update_task = form.save()
-            
-            # Logica de actividad
-            verb_text = f'actualizó la tarea "{update_task.title}"'
-            Activity.objects.create(project=task.project, actor=request.user, verb=verb_text, target=update_task)
-            # Fin logica actividad
-            
-            # Logica de notificacion de asignacion
-            new_assignee = update_task.assignee
-            if new_assignee != old_assignee and new_assignee is not None:
-                # nos aseguramos de no notificar al autor del cambio
-                Notification.objects.create(
-                    recipient=new_assignee,
-                    actor=request.user,
-                    verb='te asignó la tarea',
-                    target=update_task
-                )
-            # Fin de la logica de notificacion
-            
-            # Devolvemos la tarjeta actualizada para que htmx la reemplace en el tablero
-            return render(request, 'core/_task_card.html', {'task': update_task})
+            updated_task = form.save()
+            return render(request, 'core/_task_card.html', {'task': updated_task})
     else:
-        # si la peticion es GET, mostramos el formulario con los datos de la tarea
         form = TaskForm(instance=task, workspace=task.project.workspace)
-        
+        # Si el usuario no puede editar, deshabilita todos los campos del formulario
+        if not can_edit:
+            for field in form.fields.values():
+                field.widget.attrs['disabled'] = True
+    
     context = {
         'form': form,
         'task': task,
-        'comment_form': CommentForm()
+        'comment_form': CommentForm(),
+        'can_edit': can_edit # Pasamos la variable a la plantilla
     }
-    
-    # Devolvemos el formulario dentro de la estructura del modal.
     return render(request, 'core/_task_detail_modal.html', context)
 
 
