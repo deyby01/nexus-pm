@@ -52,6 +52,7 @@ class WorkspaceCreateView(LoginRequiredMixin, CreateView):
 
 class WorkspaceDetailView(LoginRequiredMixin, DetailView):
     model = Workspace
+    slug_url_kwarg = 'workspace_slug'
     template_name = 'core/workspace_detail.html'
     context_object_name = 'workspace'
     
@@ -66,8 +67,33 @@ class WorkspaceDetailView(LoginRequiredMixin, DetailView):
         return self.request.user.workspaces.all()
     
     
+@login_required
+def project_create_form(request, workspace_slug):
+    workspace = get_object_or_404(Workspace, slug=workspace_slug, owner=request.user)
+    form = ProjectForm()
+    return render(request, 'core/_project_create_modal.html', {'form': form, 'workspace': workspace})
+
+
+@login_required
+@require_POST
+def project_create_action(request, workspace_slug):
+    workspace = get_object_or_404(Workspace, slug=workspace_slug, owner=request.user)
+    form = ProjectForm(request.POST)
+
+    if form.is_valid():
+        project = form.save(commit=False)
+        project.workspace = workspace
+        project.save()
+        # Devolvemos la plantilla de la tarjeta con el proyecto recién creado
+        return render(request, 'core/_project_card.html', {'project': project})
+    
+    # Si el formulario no es válido, devuelve un error
+    return HttpResponse("Error en el formulario", status=400)    
+
+    
 class WorkspaceManageView(LoginRequiredMixin, DetailView):
     model = Workspace
+    slug_url_kwarg = 'workspace_slug'
     template_name = 'core/workspace_manage.html'
     context_object_name = 'workspace'
     
@@ -173,6 +199,7 @@ class ProjectCreateView(LoginRequiredMixin, CreateView):
 
 class ProjectDetailView(LoginRequiredMixin, DetailView):
     model = Project
+    slug_url_kwarg = 'project_slug'
     template_name = 'core/project_detail.html'
     context_object_name = 'project'
     

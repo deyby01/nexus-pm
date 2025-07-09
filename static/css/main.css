@@ -206,7 +206,9 @@ form.bg-white {
     letter-spacing: 0.5px;
 }
 .tasks-container {
-    min-height: 40px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 5px;
 }
 .list-group-item {
     border: none;

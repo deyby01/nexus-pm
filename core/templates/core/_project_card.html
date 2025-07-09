@@ -1,0 +1,36 @@
+<div class="col-md-6 col-lg-4 mb-4">
+    <div class="card shadow-sm border-0 project-card status-{{ project.health_status|slugify }}">
+        <div class="card-body d-flex flex-column">
+            <div class="d-flex align-items-center mb-2">
+                <div>
+                    <h5 class="card-title fw-bold mb-1">
+                        <a href="{% url 'core:project_detail' project_slug=project.slug %}" class="text-decoration-none text-dark">
+                            <i class="bi bi-folder-fill text-success me-1"></i>{{ project.name }}
+                        </a>
+                    </h5>
+                    <div class="mb-1">
+                        <span class="badge bg-primary bg-opacity-10 text-primary me-2">
+                            <i class="bi bi-kanban me-1"></i>{{ project.tasks.count }} tareas
+                        </span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            {{ project.deadline|default:"Sin fecha" }}
+                        </span>
+                    </div>
+                    <p class="card-subtitle text-muted mb-0">
+                        <strong>Estado:</strong> {{ project.health_status }}
+                    </p>
+                </div>
+                <div class="ms-auto d-flex flex-column align-items-center" style="width: 70px;">
+                    <div class="progress-circle mb-1" style="background: conic-gradient(#43d854 {{ project.progress_percentage }}%, #e0e0e0 0);">
+                        <span class="progress-text">{{ project.progress_percentage }}%</span>
+                    </div>
+                    <small class="text-muted">Completado</small>
+                </div>
+            </div>
+            <a href="{% url 'core:project_detail' project_slug=project.slug %}" class="btn btn-outline-success btn-sm rounded-pill mt-auto">
+                <i class="bi bi-eye-fill me-1"></i>Ver Detalle
+            </a>
+        </div>
+    </div>
+</div>

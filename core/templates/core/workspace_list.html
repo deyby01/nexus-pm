@@ -16,7 +16,7 @@
                 <div class="card h-100 shadow-sm border-0 workspace-card">
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title fw-bold mb-1">
-                            <a href="{% url 'core:workspace_detail' slug=workspace.slug %}" class="text-decoration-none text-dark">
+                            <a href="{% url 'core:workspace_detail' workspace_slug=workspace.slug %}" class="text-decoration-none text-dark">
                                 <i class="bi bi-folder-fill text-success me-1"></i>{{ workspace.name }}
                             </a>
                         </h5>
@@ -29,10 +29,10 @@
                             </span>
                         </div>
                         <div class="mt-auto d-flex gap-2">
-                            <a href="{% url 'core:workspace_detail' slug=workspace.slug %}" class="btn btn-outline-success btn-sm rounded-pill">
+                            <a href="{% url 'core:workspace_detail' workspace_slug=workspace.slug %}" class="btn btn-outline-success btn-sm rounded-pill">
                                 <i class="bi bi-eye-fill me-1"></i>Abrir
                             </a>
-                            <a href="{% url 'core:workspace_manage' slug=workspace.slug %}" class="btn btn-outline-secondary btn-sm rounded-pill">
+                            <a href="{% url 'core:workspace_manage' workspace_slug=workspace.slug %}" class="btn btn-outline-secondary btn-sm rounded-pill">
                                 <i class="bi bi-gear-fill me-1"></i>Gestionar
                             </a>
                         </div>
@@ -57,7 +57,7 @@
                 <div class="card h-100 shadow-sm border-0 workspace-card">
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title fw-bold mb-1">
-                            <a href="{% url 'core:workspace_detail' slug=workspace.slug %}" class="text-decoration-none text-dark">
+                            <a href="{% url 'core:workspace_detail' workspace_slug=workspace.slug %}" class="text-decoration-none text-dark">
                                 <i class="bi bi-folder2-open text-secondary me-1"></i>{{ workspace.name }}
                             </a>
                         </h5>
@@ -65,7 +65,7 @@
                             <i class="bi bi-person-badge me-1"></i>Dueño: {{ workspace.owner.get_full_name }}
                         </p>
                         <div class="mt-auto">
-                            <a href="{% url 'core:workspace_detail' slug=workspace.slug %}" class="btn btn-outline-success btn-sm rounded-pill">
+                            <a href="{% url 'core:workspace_detail' workspace_slug=workspace.slug %}" class="btn btn-outline-success btn-sm rounded-pill">
                                 <i class="bi bi-eye-fill me-1"></i>Abrir
                             </a>
                         </div>

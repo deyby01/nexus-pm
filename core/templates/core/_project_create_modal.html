@@ -1,0 +1,21 @@
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="h5">Nuevo Proyecto</h2>
+            <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn-close" aria-label="Close">x</button>
+        </div>
+        <div class="modal-body">
+            <form hx-post="{% url 'core:project_create_action' workspace_slug=workspace.slug %}"
+                  hx-target="#project-list"
+                  hx-swap="afterbegin"
+                  hx-on="htmx:afterRequest: this.closest('.modal-overlay').remove()">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Proyecto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -158,7 +158,8 @@ class Task(models.Model):
         """
         Devuelve la URL para la vista de detalle del proyecto al que pertenece esta tarea.
         """
-        return reverse('core:project_detail', kwargs={'slug': self.project.slug})
+        # El cambio está aquí: de 'slug' a 'project_slug'
+        return reverse('core:project_detail', kwargs={'project_slug': self.project.slug})
     
 
 class Comment(models.Model):

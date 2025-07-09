@@ -9,12 +9,17 @@
         </h1>
         {% if user == workspace.owner %}
         <div class="d-flex gap-2">
-            <a href="{% url 'core:workspace_manage' slug=workspace.slug %}" class="btn btn-outline-secondary rounded-pill px-3">
+            <a href="{% url 'core:workspace_manage' workspace_slug=workspace.slug %}" class="btn btn-outline-secondary rounded-pill px-3">
                 <i class="bi bi-people-fill me-1"></i>Gestionar Equipo
             </a>
-            <a href="#addProjectForm" class="btn btn-success rounded-pill px-4">
+            <button hx-get="{% url 'core:project_create_form' workspace_slug=workspace.slug %}"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                    class="btn btn-success rounded-pill px-4">
                 <i class="bi bi-plus-lg me-1"></i>Nuevo Proyecto
-            </a>
+            </button>
+
+            <div id="modal-container"></div>
         </div>
         {% endif %}
     </div>
@@ -23,45 +28,9 @@
 
     <h2 class="h4 mb-3 fw-semibold text-dark"><i class="bi bi-kanban-fill me-2 text-primary"></i>Proyectos</h2>
 
-    <div class="row">
+    <div class="row" id="project-list"> 
         {% for project in workspace.projects.all %}
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card shadow-sm border-0 project-card status-{{ project.health_status|slugify }}">
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex align-items-center mb-2">
-                            <div>
-                                <h5 class="card-title fw-bold mb-1">
-                                    <a href="{% url 'core:project_detail' slug=project.slug %}" class="text-decoration-none text-dark">
-                                        <i class="bi bi-folder-fill text-success me-1"></i>{{ project.name }}
-                                    </a>
-                                </h5>
-                                <div class="mb-1">
-                                    <span class="badge bg-primary bg-opacity-10 text-primary me-2">
-                                        <i class="bi bi-kanban me-1"></i>{{ project.tasks.count }} tareas
-                                    </span>
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                        <i class="bi bi-calendar-event me-1"></i>
-                                        {{ project.deadline|default:"Sin fecha" }}
-                                    </span>
-                                </div>
-                                <p class="card-subtitle text-muted mb-0">
-                                    <strong>Estado:</strong> {{ project.health_status }}
-                                </p>
-                            </div>
-                            <div class="ms-auto d-flex flex-column align-items-center" style="width: 70px;">
-                                <div class="progress-circle mb-1"
-                                     style="background: conic-gradient(#43d854 {{ project.progress_percentage }}%, #e0e0e0 0);">
-                                    <span class="progress-text">{{ project.progress_percentage }}%</span>
-                                </div>
-                                <small class="text-muted">Completado</small>
-                            </div>
-                        </div>
-                        <a href="{% url 'core:project_detail' slug=project.slug %}" class="btn btn-outline-success btn-sm rounded-pill mt-auto">
-                            <i class="bi bi-eye-fill me-1"></i>Ver Detalle
-                        </a>
-                    </div>
-                </div>
-            </div>
+            {% include "core/_project_card.html" with project=project %}
         {% empty %}
             <div class="col-12">
                 <div class="alert alert-info text-center py-4">
@@ -73,24 +42,6 @@
 
     <hr class="my-4">
 
-    {% if user == workspace.owner %}
-    <div id="addProjectForm" class="card shadow-sm border-0">
-        <div class="card-body">
-            <h3 class="card-title fw-semibold text-dark mb-3">
-                <i class="bi bi-plus-circle-fill text-success me-2"></i>Añadir Nuevo Proyecto
-            </h3>
-            <form action="{% url 'core:project_create' workspace_slug=workspace.slug %}" method="post" autocomplete="off">
-                {% csrf_token %}
-                {{ project_form.as_p }}
-                <button type="submit" class="btn btn-success rounded-pill px-4 w-100 mt-2">
-                    <i class="bi bi-plus-lg me-1"></i>Crear Proyecto
-                </button>
-            </form>
-        </div>
-    </div>
-    {% endif %}
-
-    <hr>
     <div class="text-center mt-4">
         <a href="{% url 'core:workspace_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
             <i class="bi bi-arrow-left me-1"></i>Volver a Mis Espacios de Trabajo
