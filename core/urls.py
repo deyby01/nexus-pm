@@ -13,6 +13,7 @@ from .views import (
     WorkspaceManageView,
     send_invitation, accept_invitation,
     project_create_form, project_create_action,
+    project_gantt_data, ProjectGanttView,
 )
 
 app_name = 'core'
@@ -26,6 +27,7 @@ urlpatterns = [
     
     # ---- Rutas de API (Endpoints para htmx) ----
     path('api/tasks/update-status/', update_task_status, name='update_task_status'),
+    path('api/projects/<slug:project_slug>/gantt-data/', project_gantt_data, name='project_gantt_data'),
 
     # ---- Rutas de Workspaces (Específicas primero, genéricas después) ----
     path('<slug:workspace_slug>/manage/', WorkspaceManageView.as_view(), name='workspace_manage'),
@@ -36,6 +38,7 @@ urlpatterns = [
 
     # ---- Rutas de Proyectos y Tareas (Siempre usan un identificador único) ----
     path('projects/<slug:project_slug>/', ProjectDetailView.as_view(), name='project_detail'),
+    path('projects/<slug:project_slug>/gantt/', ProjectGanttView.as_view(), name='project_gantt'),
     path('projects/<slug:project_slug>/tasks/create/', create_task, name='task_create'),
     path('tasks/<int:pk>/', task_detail_update, name='task_detail_update'),
     path('tasks/<int:task_pk>/add-comment/', add_comment, name='add_comment'),

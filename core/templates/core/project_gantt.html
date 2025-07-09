@@ -1,0 +1,49 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2">Cronograma: {{ project.name }}</h1>
+            <p class="text-muted">Vista de línea de tiempo de las tareas.</p>
+        </div>
+        <a href="{% url 'core:project_detail' project_slug=project.slug %}" class="btn btn-outline-primary">
+            <i class="bi bi-kanban-fill me-1"></i>Volver al Kanban
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <svg id="gantt"></svg>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+    // 1. Importamos la clase Gantt directamente desde la URL del CDN
+    import Gantt from "https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.min.js";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dataUrl = "{% url 'core:project_gantt_data' project_slug=project.slug %}";
+
+        fetch(dataUrl)
+            .then(response => response.json())
+            .then(tasks => {
+                if (tasks.length === 0) {
+                    document.querySelector("#gantt").innerHTML = "<p class='p-3 text-center text-muted'>No hay tareas con fechas definidas para mostrar en el cronograma.</p>";
+                    return;
+                }
+
+                // 2. Ahora, 'Gantt' está definido y se puede usar sin problemas.
+                const gantt = new Gantt("#gantt", tasks, {
+                    header_height: 50,
+                    bar_height: 25,
+                    padding: 20,
+                    view_mode: 'Week'
+                });
+            });
+    });
+</script>
+{% endblock %}

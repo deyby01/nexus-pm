@@ -5,7 +5,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation
 from .forms import WorkspaceForm, ProjectForm, TaskForm, CommentForm, InvitationForm
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from .utils import can_user_interact_with_project
@@ -485,3 +485,36 @@ class NotificationListView(LoginRequiredMixin, ListView):
         Ahora este método solo tiene una responsabilidad: obtener la lista.
         """
         return self.request.user.notifications.all()
+    
+    
+def project_gantt_data(request, project_slug):
+    """
+    Prepara y devuelve los datos de las tareas para el gráfico Gantt.
+    """
+    project = get_object_or_404(Project, slug=project_slug, workspace__members=request.user)
+    # Filtramos tareas que tengan fecha de inicio (created_at) y fecha limite (due_date)
+    tasks = project.tasks.filter(due_date__isnull=False).order_by('due_date')
+    # Transformamos las tareas al formato que espera Frappe Gantt
+    gantt_tasks = []
+    for task in tasks:
+        progress = 100 if task.status == Task.Status.DONE else 0
+        gantt_tasks.append({
+            'id': f'task_{task.id}',
+            'name': task.title,
+            'start': task.created_at.strftime('%Y-%m-%d'),
+            'end': task.due_date.strftime('%Y-%m-%d'),
+            'progress': progress,
+        })
+        
+    return JsonResponse(gantt_tasks, safe=False)
+
+
+class ProjectGanttView(LoginRequiredMixin, DetailView):
+    model = Project
+    slug_url_kwarg = 'project_slug'
+    template_name = 'core/project_gantt.html'
+    context_object_name = 'project'
+    
+    def get_queryset(self):
+        # Filtro de seguridad
+        return Project.objects.filter(workspace__members=self.request.user)
