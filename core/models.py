@@ -8,6 +8,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 import uuid
+from datetime import timedelta
 
 class User(AbstractUser):
     """ 
@@ -161,6 +162,14 @@ class Task(models.Model):
         # El cambio está aquí: de 'slug' a 'project_slug'
         return reverse('core:project_detail', kwargs={'project_slug': self.project.slug})
     
+    @property
+    def total_logged_time(self):
+        """ Suma la duracion de todos los registros de tiempo completados para esta tarea. """
+        total_duration = timedelta()
+        for log in self.timelogs.filter(end_time__isnull=False):
+            total_duration += log.duration
+        return total_duration
+    
 
 class Comment(models.Model):
     """ Representa un comentario en una tarea. """
@@ -241,3 +250,22 @@ class Invitation(models.Model):
     def __str__(self):
         status = "Aceptada" if self.is_accepted else "Pendiente"
         return f'Invitación para {self.email} a {self.workspace.name} ({status})'
+    
+    
+    
+class TimeLog(models.Model):
+    """ Representa un bloque de tiempo trabajado en una tarea. """
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='timelogs')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    start_time = models.DateTimeField(auto_now_add=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    
+    @property
+    def duration(self):
+        """ Calcula la duracion del registro de tiempo. Si aún no ha terminado, devuelve 'En curso'. """
+        if self.end_time:
+            return self.end_time - self.start_time
+        return "En curso"
+    
+    def __str__(self):
+        return f'Registro de {self.user} en {self.task.title} ({self.duration})'

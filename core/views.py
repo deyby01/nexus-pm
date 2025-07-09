@@ -3,7 +3,7 @@ from django.views.generic import ListView, CreateView, DetailView, TemplateView
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation
+from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation, TimeLog
 from .forms import WorkspaceForm, ProjectForm, TaskForm, CommentForm, InvitationForm
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
@@ -11,6 +11,10 @@ from django.contrib.auth.decorators import login_required
 from .utils import can_user_interact_with_project
 from django.contrib import messages
 from django.db.models import Q
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class LandingPageView(TemplateView):
     template_name = 'core/landing_page.html'
@@ -294,6 +298,23 @@ def update_task_status(request):
         task.status = new_status_key
         task.save(update_fields=['status']) # Actualiza solo el campo 'status'
         
+        # ---- Logica AUTOMATIZACION ------
+        if new_status_key == Task.Status.DONE:
+            try:
+                # Intenta obtener el usuario bot que creamos
+                bot_find = 'nexus-bot'
+                bot_user = User.objects.get(username=bot_find)
+                Comment.objects.create(
+                    task=task,
+                    author=bot_user,
+                    text='¡Tarea Finalizada! Pendiente de revisión.'
+                )
+                
+            except User.DoesNotExist:
+                # Si el bot no existe, no hacemos nada para no causar un error
+                print("Advertencia: El usuario 'nexus-bot' no existe para la Automatización.")
+        # ---- Fin de la Logica AUTOMATIZACION ------
+        
         # Logica notificacion
         # Obtenemos la etiqueta legible del nuevo estado
         new_status_label = task.get_status_display()
@@ -397,11 +418,19 @@ def task_detail_update(request, pk):
             for field in form.fields.values():
                 field.widget.attrs['disabled'] = True
     
+    # Verificamos si hay un cronometro activo para el usuario y la tarea.
+    is_timer_active = TimeLog.objects.filter(
+        task=task,
+        user=request.user,
+        end_time__isnull=True
+    ).exists()
+    
     context = {
         'form': form,
         'task': task,
         'comment_form': CommentForm(),
-        'can_edit': can_edit # Pasamos la variable a la plantilla
+        'can_edit': can_edit, # Pasamos la variable a la plantilla
+        'is_timer_active': is_timer_active,  # Indicamos si el cronómetro está activo
     }
     return render(request, 'core/_task_detail_modal.html', context)
 
@@ -518,3 +547,27 @@ class ProjectGanttView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         # Filtro de seguridad
         return Project.objects.filter(workspace__members=self.request.user)
+    
+
+
+@login_required
+@require_POST
+def toggle_time_log(request, task_pk):
+    task = get_object_or_404(Task, pk=task_pk, project__workspace__members=request.user)
+
+    active_log = TimeLog.objects.filter(
+        task=task, user=request.user, end_time__isnull=True
+    ).first()
+
+    if active_log:
+        active_log.end_time = timezone.now()
+        active_log.save()
+    else:
+        TimeLog.objects.create(task=task, user=request.user)
+
+    # Preparamos el contexto para el componente
+    is_timer_active = not active_log
+    context = {'task': task, 'is_timer_active': is_timer_active, 'user': request.user}
+
+    # Devolvemos solo el componente del cronómetro actualizado
+    return render(request, 'core/_time_tracker_component.html', context)

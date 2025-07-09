@@ -1,0 +1,24 @@
+<div class="card bg-light border-0 mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="card-title mb-0">Registro de Tiempo</h6>
+                <small class="text-muted">Tiempo total registrado: {{ task.total_logged_time }}</small>
+            </div>
+            <form hx-post="{% url 'core:toggle_time_log' task_pk=task.pk %}"
+                  hx-target="#time-tracker-wrapper"
+                  hx-swap="outerHTML">
+                {% csrf_token %}
+                {% if is_timer_active %}
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bi bi-stop-circle-fill me-1"></i>Detener Tiempo
+                    </button>
+                {% else %}
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-play-circle-fill me-1"></i>Iniciar Tiempo
+                    </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>

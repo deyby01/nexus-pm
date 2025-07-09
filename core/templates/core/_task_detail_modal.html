@@ -1,13 +1,17 @@
 <div class="modal-overlay" id="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Editar Tarea</h2>
+            <h2 class="h5">Editar Tarea</h2>
             <button type="button" 
-                    onclick="document.querySelector('#modal-overlay').remove()"
+                    onclick="this.closest('.modal-overlay').remove()"
                     class="btn-close" 
-                    aria-label="Close"></button>
+                    aria-label="Close">X</button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" hx-target="this" hx-swap="outerHTML">
+
+            <div id="time-tracker-wrapper">
+                {% include "core/_time_tracker_component.html" %}
+            </div>
             <form hx-post="{% url 'core:task_detail_update' pk=task.pk %}"
                   hx-target="#task-{{ task.id }}"
                   hx-swap="outerHTML"
@@ -15,10 +19,11 @@
                 
                 {% csrf_token %}
                 {{ form.as_p }}
-                {% if can_edit %}
-                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                {% endif %}
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="document.querySelector('#modal-container').innerHTML = ''">Cancelar</button>
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    {% if can_edit %}
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    {% endif %}
+                </div>
             </form>
 
             <hr class="my-4">

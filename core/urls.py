@@ -14,6 +14,7 @@ from .views import (
     send_invitation, accept_invitation,
     project_create_form, project_create_action,
     project_gantt_data, ProjectGanttView,
+    toggle_time_log,
 )
 
 app_name = 'core'
@@ -42,4 +43,5 @@ urlpatterns = [
     path('projects/<slug:project_slug>/tasks/create/', create_task, name='task_create'),
     path('tasks/<int:pk>/', task_detail_update, name='task_detail_update'),
     path('tasks/<int:task_pk>/add-comment/', add_comment, name='add_comment'),
+    path('tasks/<int:task_pk>/toggle-time/', toggle_time_log, name='toggle_time_log'),
 ]
