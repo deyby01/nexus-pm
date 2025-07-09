@@ -3,89 +3,110 @@
 {% load static %}
 
 {% block content %}
-<h1 class="fw-bold text-dark mb-2">Proyecto: {{ project.name }}</h1>
-<p class="mb-4 text-secondary">{{ project.description|default:"" }}</p>
-
-{% if is_locked %}
-<div class="alert alert-warning" role="alert">
-    <strong>Proyecto Vencido.</strong> Las modificaciones están bloqueadas. Solo el dueño puede gestionarlo.
-</div>
-{% else %}
-<div class="mb-3">
-    <button hx-get="{% url 'core:task_create' project_slug=project.slug %}"
-            hx-target="#modal-container"
-            hx-swap="innerHTML"
-            class="btn btn-success rounded-pill px-4 fw-semibold">
-        + Añadir Nueva Tarea
-    </button>
-</div>
-<div class="btn-group mt-3" role="group" aria-label="Filtros de tareas">
-    <a href="{% url 'core:project_detail' slug=project.slug %}" 
-       class="btn {% if not active_filter %}btn-primary{% else %}btn-outline-primary{% endif %}">
-       Todas las Tareas
-    </a>
-    <a href="?filter_by=my_tasks" 
-       class="btn {% if active_filter == 'my_tasks' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-       Mis Tareas
-    </a>
-</div>
-<form method="GET" action="" class="mt-3">
-    <div class="input-group">
-        <input type="text" name="q" class="form-control" placeholder="Buscar tareas..." value="{{ search_query|default:'' }}">
-        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h1 class="h2 fw-bold text-dark mb-1">
+                <i class="bi bi-kanban-fill text-success me-2"></i>Proyecto: {{ project.name }}
+            </h1>
+            <p class="mb-0 text-muted">{{ project.description|default:"Sin descripción" }}</p>
+        </div>
+        {% if not is_locked %}
+        <div class="d-flex gap-2">
+            <button hx-get="{% url 'core:task_create' project_slug=project.slug %}"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                    class="btn btn-success rounded-pill px-4 fw-semibold shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nueva Tarea
+            </button>
+        </div>
+        {% endif %}
     </div>
-</form>
-<hr class="mb-4">
 
-<div id="modal-container"></div>
-<hr class="mb-4">
-{% endif %}
+    {% if is_locked %}
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <i class="bi bi-lock-fill me-2 fs-4"></i>
+        <div>
+            <strong>Proyecto Vencido.</strong> Las modificaciones están bloqueadas. Solo el dueño puede gestionarlo.
+        </div>
+    </div>
+    {% endif %}
 
-<div class="row">
-    <div class="col-lg-4 mb-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">Resumen de Tareas</h5>
-                <canvas id="taskStatusChart"></canvas>
+    {% if not is_locked %}
+    <div class="btn-group mt-3 mb-2" role="group" aria-label="Filtros de tareas">
+        <a href="{% url 'core:project_detail' slug=project.slug %}" 
+           class="btn {% if not active_filter %}btn-primary{% else %}btn-outline-primary{% endif %}">
+           <i class="bi bi-list-task me-1"></i>Todas las Tareas
+        </a>
+        <a href="?filter_by=my_tasks" 
+           class="btn {% if active_filter == 'my_tasks' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+           <i class="bi bi-person-check me-1"></i>Mis Tareas
+        </a>
+    </div>
+    <form method="GET" action="" class="mt-3 mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Buscar tareas..." value="{{ search_query|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Buscar</button>
+        </div>
+    </form>
+    {% endif %}
+
+    <div id="modal-container"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="bi bi-pie-chart-fill text-success me-2"></i>Resumen de Tareas</h5>
+                    <canvas id="taskStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="bi bi-clock-history text-primary me-2"></i>Actividad Reciente</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for activity in activities %}
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="bi bi-person-circle text-success me-2"></i>
+                                <div>
+                                    <strong>{{ activity.actor.get_full_name }}</strong>
+                                    {{ activity.verb }}
+                                    {% if activity.target %}
+                                        <strong>"{{ activity.target }}"</strong>
+                                    {% endif %}
+                                    <br>
+                                    <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ activity.created_at|timesince }} ago</span>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-center text-muted py-4">
+                                <i class="bi bi-inbox me-2"></i>No hay actividad reciente en este proyecto.
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="card shadow-sm mt-4">
-    <div class="card-body">
-        <h5 class="card-title">Actividad Reciente</h5>
-        <ul class="list-group list-group-flush">
-            {% for activity in activities %}
-                <li class="list-group-item">
-                    <small>
-                        <strong>{{ activity.actor.get_full_name }}</strong>
-                        {{ activity.verb }}
-                        {% if activity.target %}
-                            <strong>"{{ activity.target }}"</strong>
-                        {% endif %}
-                        <span class="text-muted d-block">{{ activity.created_at|timesince }} ago</span>
-                    </small>
-                </li>
-            {% empty %}
-                <li class="list-group-item">No hay actividad reciente en este proyecto.</li>
-            {% endfor %}
-        </ul>
-    </div>
-</div>
+    <hr class="my-5">
 
-<div class="kanban-board" data-update-url="{% url 'core:update_task_status' %}">
-    {% for status_value, status_label in status_choices %}
-        <div class="kanban-column">
-            <h3 class="kanban-title">{{ status_label }}</h3>
-            <hr>
-            <div class="tasks-container" id="status-{{ status_value }}" data-status="{{ status_value }}">
-                {% for task in grouped_tasks|get_item:status_value %}
-                    {% include "core/_task_card.html" %}
-                {% endfor %}
+    <h3 class="fw-semibold text-dark mb-3"><i class="bi bi-columns-gap me-2 text-primary"></i>Tablero Kanban</h3>
+    <div class="kanban-board" data-update-url="{% url 'core:update_task_status' %}">
+        {% for status_value, status_label in status_choices %}
+            <div class="kanban-column">
+                <h4 class="kanban-title mb-2">{{ status_label }}</h4>
+                <hr>
+                <div class="tasks-container" id="status-{{ status_value }}" data-status="{{ status_value }}">
+                    {% for task in grouped_tasks|get_item:status_value %}
+                        {% include "core/_task_card.html" %}
+                    {% endfor %}
+                </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
 

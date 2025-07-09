@@ -3,31 +3,39 @@
 {% load socialaccount %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow feature-card border-0">
                 <div class="card-body p-5">
-                    <h1 class="card-title text-center mb-4">Crear una Cuenta</h1>
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus-fill display-3 text-success mb-2"></i>
+                        <h1 class="card-title mb-2 fw-bold">Crear una Cuenta</h1>
+                        <p class="text-muted mb-0">Únete a Nexus PM y comienza a organizar tus proyectos</p>
+                    </div>
 
-                    <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+                    <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}" autocomplete="off">
                         {% csrf_token %}
                         {{ form.as_p }}
-                        <div class="d-grid">
-                            <button class="btn btn-primary" type="submit">Registrarse</button>
+                        <div class="d-grid mb-2">
+                            <button class="btn btn-success rounded-pill px-4 fw-semibold" type="submit">
+                                <i class="bi bi-person-check-fill me-2"></i>Registrarse
+                            </button>
                         </div>
                     </form>
 
-                    <p class="mt-3 text-center">
-                        ¿Ya tienes una cuenta? <a href="{{ login_url }}">Inicia sesión</a>.
-                    </p>
+                    <div class="text-center mt-3">
+                        <span class="text-muted">¿Ya tienes una cuenta?</span>
+                        <a href="{{ login_url }}" class="fw-semibold text-success ms-1">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Inicia sesión
+                        </a>
+                    </div>
 
-                    <hr>
-                    <div class="text-center text-muted">o</div>
+                    <div class="text-center text-muted my-2">o</div>
 
                     <div class="d-grid gap-2 mb-4">
-                        <a class="btn btn-danger" href="{% provider_login_url 'google' %}">
-                            <i class="bi bi-google"></i> Continuar con Google
+                        <a class="btn btn-danger rounded-pill px-4 fw-semibold" href="{% provider_login_url 'google' %}">
+                            <i class="bi bi-google me-2"></i>Continuar con Google
                         </a>
                     </div>
                 </div>

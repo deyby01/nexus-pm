@@ -2,34 +2,55 @@
 {% load static %}
 
 {% block content %}
-<div class="container text-center py-5">
-    <h1 class="display-4 fw-bold">Bienvenido a Nexus PM</h1>
-    <p class="lead col-lg-6 mx-auto text-muted">Tu nueva plataforma para gestionar proyectos, tareas y equipos de forma sencilla y colaborativa.</p>
+<section class="hero-section d-flex flex-column justify-content-center align-items-center text-center py-5 mb-5">
+    <h1 class="display-3 fw-bold text-white mb-3 hero-title">Bienvenido a Nexus PM</h1>
+    <p class="lead text-light mb-4 hero-subtitle">Gestiona proyectos, tareas y equipos de forma sencilla, visual y colaborativa.</p>
+    <a href="{% url 'account_login' %}" class="btn btn-success btn-lg rounded-pill px-5 shadow-sm hero-cta">
+        <i class="bi bi-rocket-takeoff-fill me-2"></i>¡Empezar ahora!
+    </a>
+</section>
 
-    <div class="my-5">
-        <h2 class="h4">¿Quieres empezar a organizar tu trabajo?</h2>
-        <p>Crea tus propios espacios de trabajo y comienza a añadir proyectos en minutos.</p>
-        <a href="{% url 'account_login' %}" class="btn btn-primary btn-lg rounded-pill px-4">¡Empezar ahora!</a>
+<section class="container mb-5">
+    <div class="row text-center g-4">
+        <div class="col-lg-4">
+            <div class="feature-card h-100 p-4">
+                <i class="bi bi-kanban-fill fs-1 text-success"></i>
+                <h3 class="fw-semibold mt-3 mb-2">Tableros Kanban</h3>
+                <p class="text-muted">Visualiza el flujo de trabajo de tu equipo y mueve tareas con facilidad.</p>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="feature-card h-100 p-4">
+                <i class="bi bi-chat-dots-fill fs-1 text-success"></i>
+                <h3 class="fw-semibold mt-3 mb-2">Colaboración Real</h3>
+                <p class="text-muted">Comenta, adjunta archivos y recibe notificaciones para estar siempre al día.</p>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="feature-card h-100 p-4">
+                <i class="bi bi-graph-up-arrow fs-1 text-success"></i>
+                <h3 class="fw-semibold mt-3 mb-2">Visualiza tu Progreso</h3>
+                <p class="text-muted">Con gráficos y reportes de salud del proyecto, toma mejores decisiones.</p>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<div class="container">
-    <div class="row text-center">
-        <div class="col-lg-4">
-            <i class="bi bi-kanban-fill fs-1 text-primary"></i>
-            <h3 class="fw-normal mt-3">Tableros Kanban</h3>
-            <p>Visualiza el flujo de trabajo de tu equipo y mueve tareas con facilidad.</p>
+<section class="container my-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <img src="{% static 'img/landing_kanban.svg' %}" alt="Kanban ilustración" class="img-fluid rounded-4 shadow-sm">
         </div>
-        <div class="col-lg-4">
-            <i class="bi bi-chat-dots-fill fs-1 text-primary"></i>
-            <h3 class="fw-normal mt-3">Colaboración Real</h3>
-            <p>Comenta, adjunta archivos y recibe notificaciones para estar siempre al día.</p>
-        </div>
-        <div class="col-lg-4">
-            <i class="bi bi-graph-up-arrow fs-1 text-primary"></i>
-            <h3 class="fw-normal mt-3">Visualiza tu Progreso</h3>
-            <p>Con gráficos y reportes de salud del proyecto, toma mejores decisiones.</p>
+        <div class="col-lg-6">
+            <h2 class="fw-bold mb-3">¿Por qué Nexus PM?</h2>
+            <ul class="list-unstyled fs-5 text-muted mb-4">
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Espacios de trabajo colaborativos</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Gestión visual de tareas y proyectos</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Notificaciones y seguimiento en tiempo real</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Interfaz intuitiva y moderna</li>
+            </ul>
+            <a href="{% url 'account_signup' %}" class="btn btn-outline-dark btn-lg rounded-pill px-5">Crear cuenta gratis</a>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

@@ -1,4 +1,4 @@
-<div class="task-card"
+<div class="task-card mb-3 shadow-sm task-{{ task.status|slugify }}"
      id="task-{{ task.id }}"
      hx-get="{% url 'core:task_detail_update' pk=task.id %}"
      hx-target="#modal-container"
@@ -7,8 +7,8 @@
     <strong>{{ task.title }}</strong>
     {% if task.assignee %}
         <p class="mb-1 mt-2 text-muted">
-            <small><li class="bi bi-person-circle"></li>{{ task.assignee.get_full_name }}</small>
+            <small><i class="bi bi-person-circle me-1"></i>{{ task.assignee.get_full_name }}</small>
         </p>
     {% endif %}
-    <p class="mb-0"><small>Límite: {{ task.due_date|default:"N/A" }}</small></p>
+    <p class="mb-0"><small><i class="bi bi-calendar-event me-1"></i>Límite: {{ task.due_date|default:"N/A" }}</small></p>
 </div>

@@ -5,48 +5,109 @@ body {
     color: #222;
 }
 
-.navbar,
-footer {
+.navbar {
     background: linear-gradient(90deg, #232526 0%, #414345 100%);
     color: #fff !important;
+    letter-spacing: 0.2px;
 }
 
-.navbar .navbar-brand,
-.navbar .nav-link,
-footer {
+.navbar .navbar-brand {
+    letter-spacing: 1.5px;
+    font-size: 1.35rem;
+}
+
+.navbar .nav-link {
     color: #fff !important;
+    font-weight: 500;
+    transition: color 0.15s;
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
 }
 
 .navbar .nav-link.active,
 .navbar .nav-link:focus,
 .navbar .nav-link:hover {
     color: #bdbdbd !important;
+    background: rgba(255,255,255,0.04);
 }
 
+.navbar .dropdown-menu {
+    min-width: 180px;
+    font-size: 1rem;
+}
+
+.btn-outline-light {
+    border-radius: 20px;
+    font-weight: 500;
+    border-width: 2px;
+}
+
+.notification-badge {
+    font-size: 0.7em;
+    padding: 0.3em 0.5em;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(220,53,69,0.10);
+}
 footer {
-    font-size: 0.95rem;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
-    border-top: 1px solid #444;
+    background: linear-gradient(90deg, #232526 0%, #414345 100%);
+    color: #fff !important;
+    /* ...otros estilos... */
+}
+.footer-text {
+    font-size: 0.97rem;
+    letter-spacing: 0.2px;
 }
 
-footer strong {
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    color: #fff;
+
+/* Hero/Landing Page o pagina principal ------------------------------- */
+.hero-section {
+    background: linear-gradient(120deg, #232526 60%, #43d854 100%);
+    min-height: 350px;
+    border-radius: 0 0 2.5rem 2.5rem;
+    box-shadow: 0 8px 32px rgba(33,37,41,0.10);
+    margin-bottom: 3rem;
 }
+.hero-title {
+    text-shadow:
+        0 2px 12px rgba(0,0,0,0.18),   /* Sombra suave */
+        0 0 2px #232526,                /* Contorno oscuro sutil */
+        0 0 1px #232526;
+    color: #fff; /* Blanco para contraste */
+    letter-spacing: 1.5px;
+}
+.hero-subtitle {
+    font-size: 1.3rem;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.10);
+}
+.hero-cta {
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.feature-card {
+    background: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 2px 16px rgba(33,37,41,0.07);
+    transition: box-shadow 0.18s;
+}
+.feature-card:hover {
+    box-shadow: 0 6px 32px rgba(33,37,41,0.13);
+    transform: translateY(-4px) scale(1.03);
+}
+
 
 
 /*Workspace List estilo de plantilla --------------------------------------------*/
 
 .workspace-card {
-    border: 1px solid #dee2e6;
+    border-radius: 1.1rem;
     background: #fff;
-    transition: box-shadow 0.2s, border-color 0.2s;
-    border-radius: 0.75rem;
+    transition: box-shadow 0.18s, border-color 0.18s;
 }
 .workspace-card:hover {
-    box-shadow: 0 4px 24px rgba(33,37,41,0.10);
-    border-color: #bdbdbd;
+    box-shadow: 0 6px 32px rgba(33,37,41,0.13);
+    border-color: #43d854;
 }
 
 .stretched-link {
@@ -54,22 +115,33 @@ footer strong {
     z-index: 1;
 }
 
-/* Project Card Minimalista */
-.project-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 0.75rem;
-    padding: 1.5rem 1.25rem 1.25rem 1.25rem;
-    background: #fff;
-    transition: box-shadow 0.2s, border-color 0.2s;
-    position: relative;
-    min-height: 180px;
+
+
+/* Mejoras visuales para gestión de equipo */
+.card-header {
+    background: #fff !important;
+    border-bottom: none !important;
 }
-.project-card:hover {
-    box-shadow: 0 4px 24px rgba(33,37,41,0.10);
-    border-color: #bdbdbd;
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+}
+.list-group-item:last-child {
+    border-bottom: none;
 }
 
-/* Barra de progreso circular minimalista */
+
+
+/* Project Card Minimalista Workspace_detail ------------------------------- */
+.project-card {
+    border-radius: 1.1rem;
+    background: #fff;
+    transition: box-shadow 0.18s, border-color 0.18s;
+}
+.project-card:hover {
+    box-shadow: 0 6px 32px rgba(33,37,41,0.13);
+    border-color: #43d854;
+}
 .progress-circle {
     width: 56px;
     height: 56px;
@@ -81,9 +153,19 @@ footer strong {
     font-weight: 600;
     color: #222;
     background: #f8faf8;
-    margin-left: auto;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
     box-shadow: 0 1px 4px rgba(33,37,41,0.04);
+    position: relative;
+}
+.progress-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1em;
+    font-weight: 600;
+    color: #222;
+    letter-spacing: 0.5px;
 }
 
 /* Colores de borde para la salud del proyecto ---------------------------------*/
@@ -107,17 +189,15 @@ form.bg-white {
     padding-bottom: 1.5rem;
     margin-bottom: 2rem;
 }
-
 .kanban-column {
-    min-width: 300px;
+    min-width: 320px;
     background: #f7f9fb;
-    border-radius: 12px;
+    border-radius: 1.1rem;
     padding: 1rem 0.75rem;
     box-shadow: 0 2px 8px rgba(33,37,41,0.06);
     border: 1px solid #e5e7eb;
     min-height: 400px;
 }
-
 .kanban-title {
     font-weight: 600;
     color: #232526;
@@ -125,29 +205,49 @@ form.bg-white {
     text-align: center;
     letter-spacing: 0.5px;
 }
-
 .tasks-container {
     min-height: 40px;
 }
-
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+}
+.list-group-item:last-child {
+    border-bottom: none;
+}
 .task-card {
+    border-radius: 0.75rem;
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(33,37,41,0.07);
-    padding: 0.85rem 1rem;
-    margin-bottom: 0.7rem;
-    cursor: grab;
-    border-left: 4px solid #43d854;
-    transition: box-shadow 0.15s, border-color 0.15s;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(33,37,41,0.08);
+    border-left: 6px solid #dee2e6;
+    transition: box-shadow 0.18s, border-color 0.18s;
+    padding: 1rem 1.2rem;
 }
-.task-card:hover {
-    box-shadow: 0 4px 16px rgba(33,37,41,0.10);
-    border-color: #0ea700;
+/* Colores y sombras para cada estado de tarea en el Kanban */
+.task-backlog {
+    border-left: 6px solid #6c757d !important; /* gris oscuro */
+    box-shadow: 0 2px 12px rgba(108,117,125,0.10);
 }
-
-.ghost {
-    opacity: 0.5;
-    background: #e0e0e0;
+.task-todo {
+    border-left: 6px solid #0d6efd !important; /* azul */
+    box-shadow: 0 2px 12px rgba(13,110,253,0.10);
+}
+.task-in_progress {
+    border-left: 6px solid #ffc107 !important; /* amarillo */
+    box-shadow: 0 2px 12px rgba(255,193,7,0.10);
+}
+.task-paused {
+    border-left: 6px solid #fd7e14 !important; /* naranja */
+    box-shadow: 0 2px 12px rgba(253,126,20,0.10);
+}
+.task-done {
+    border-left: 6px solid #43d854 !important; /* verde */
+    box-shadow: 0 2px 12px rgba(67,216,84,0.10);
+}
+.task-canceled {
+    border-left: 6px solid #dc3545 !important; /* rojo */
+    box-shadow: 0 2px 12px rgba(220,53,69,0.10);
 }
 
 

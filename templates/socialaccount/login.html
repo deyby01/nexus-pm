@@ -1,0 +1,38 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow feature-card border-0 text-center">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        {% if provider.id == "google" %}
+                            <i class="bi bi-google display-3 text-danger mb-2"></i>
+                        {% else %}
+                            <i class="bi bi-person-circle display-3 text-primary mb-2"></i>
+                        {% endif %}
+                        <h1 class="card-title mb-2 fw-bold">Iniciar sesión con {{ provider.name }}</h1>
+                    </div>
+                    <p class="text-muted mb-4">
+                        Estás a punto de iniciar sesión en <span class="fw-semibold text-success">Nexus PM</span> usando tu cuenta de <span class="fw-semibold">{{ provider.name }}</span>.<br>
+                        Haz clic en <span class="fw-semibold">Continuar</span> para completar el proceso de autenticación segura.
+                    </p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button class="btn btn-danger btn-lg rounded-pill px-4 fw-semibold shadow-sm" type="submit">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Continuar con {{ provider.name }}
+                        </button>
+                    </form>
+                    <div class="mt-4">
+                        <a href="{% url 'account_login' %}" class="text-muted small">
+                            <i class="bi bi-arrow-left me-1"></i>Volver a inicio de sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

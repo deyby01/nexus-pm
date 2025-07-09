@@ -118,30 +118,42 @@ def send_invitation(request, workspace_slug):
 
 @login_required
 def accept_invitation(request, token):
-    # Buscamos una invitacion que coincida con el token y que no haya sido aceptada aun
-    invitation = get_object_or_404(Invitation, token=token, accepted=False)
+    # El error estaba en esta línea. Cambiamos 'accepted' por 'is_accepted'.
+    invitation = get_object_or_404(Invitation, token=token, is_accepted=False)
     
     workspace = invitation.workspace
     user = request.user
-    
-    # Verificamos si el usuario ya es miembro para no añadirlo 2 veces
+
+    # Verificamos si el usuario ya es miembro para no añadirlo dos veces
     if workspace.members.filter(id=user.id).exists():
-        messages.warning(request, 'Ya eres miembro de este equipo.')
+        messages.warning(request, "Ya eres miembro de este equipo.")
         return redirect('core:workspace_detail', slug=workspace.slug)
-    
-    # Si todo esta en orden añadimos al usuario al equipo
-    verb_text = f'Se unió al equipo "{workspace.name}"'
-    Activity.objects.create(project=None, actor=user, verb=verb_text)
+
+    # Si todo está en orden, añadimos al usuario al equipo
+    Membership.objects.create(
+        user=user,
+        workspace=workspace,
+        role=Membership.Role.MEMBER
+    )
+
+    # Marcamos la invitación como utilizada
+    invitation.is_accepted = True
+    invitation.save()
+
+    # Creamos un registro de actividad y notificaciones
+    verb_text = f'se unió al equipo "{workspace.name}"'
+    # Corregimos el target para que apunte al workspace, no a un proyecto nulo
+    Activity.objects.create(project=None, actor=user, verb=verb_text, target=workspace)
     
     # Notificamos al dueño del workspace
     Notification.objects.create(
         recipient=workspace.owner,
         actor=user,
-        verb='acepto tu invitación para unirse al equipo',
+        verb='aceptó tu invitación para unirse al equipo',
         target=workspace
     )
-    
-    messages.success(request, f'¡Bienvenido! Has sido añadido al equipo "{workspace.name}".')
+
+    messages.success(request, f"¡Bienvenido! Has sido añadido al equipo '{workspace.name}'.")
     return redirect('core:workspace_detail', slug=workspace.slug)
 
 class ProjectCreateView(LoginRequiredMixin, CreateView):

@@ -208,7 +208,7 @@ class Notification(models.Model):
 
 class Activity(models.Model):
     """Representa una acción realizada dentro de un proyecto."""
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities', null=True, blank=True)
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     verb = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
