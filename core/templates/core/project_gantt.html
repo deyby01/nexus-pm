@@ -12,9 +12,39 @@
         </a>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div id="gantt-container"></div>
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Equipo del Proyecto</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for member in project.workspace.members.all %}
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-person-circle me-2"></i>
+                            {{ member.get_full_name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="mt-4">
+                <h5>Leyenda de Estados</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge text-bg-secondary">Backlog/Por Hacer</span>
+                    <span class="badge text-bg-primary">En Progreso</span>
+                    <span class="badge text-bg-success">Completada</span>
+                    <span class="badge text-bg-warning">Pausada</span>
+                    <span class="badge text-bg-danger">Cancelada</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div id="gantt-container"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -22,8 +52,6 @@
 
 {% block extra_js %}
 <script>
-    // Ya no necesitamos 'type="module"' ni la línea 'import'
-
     document.addEventListener('DOMContentLoaded', function() {
         const dataUrl = "{% url 'core:project_gantt_data' project_slug=project.slug %}";
 
@@ -33,20 +61,26 @@
                 const gantt_container = document.querySelector("#gantt-container");
 
                 if (!tasks || tasks.length === 0) {
-                    gantt_container.innerHTML = "<p class='p-3 text-center text-muted'>No hay tareas para mostrar.</p>";
+                    gantt_container.innerHTML = "<p class='p-3 text-center text-muted'>No hay tareas con fechas definidas para mostrar en el cronograma.</p>";
                     return;
                 }
 
-                // Como el script se carga globalmente, la clase 'Gantt' ya existe y podemos usarla.
                 try {
+                    // Inicializamos el gráfico con la nueva opción para el pop-up personalizado
                     const gantt = new Gantt("#gantt-container", tasks, {
-                        on_click: (task) => {
-                            console.log("Clic en la tarea:", task);
-                            htmx.ajax('GET', `/workspaces/tasks/${task.id.replace('task_','')}/`, {
-                                target: '#modal-container',
-                                swap: 'innerHTML'
-                            });
-                        },
+                        custom_popup_html: function(task) {
+                            return `
+                                <div class="popover-content p-2">
+                                    <h6 class="mb-2">${task.name}</h6>
+                                    <p class="text-muted mb-1">
+                                        <i class="bi bi-person-circle"></i> Asignado a: <strong>${task.assignee}</strong>
+                                    </p>
+                                    <p class="text-muted mb-0">
+                                        <small>Del ${task.start} al ${task.end}</small>
+                                    </p>
+                                </div>
+                            `;
+                        }
                     });
                 } catch (error) {
                     console.error("¡ERROR FATAL AL CREAR EL GRÁFICO!", error);

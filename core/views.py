@@ -553,14 +553,17 @@ def project_gantt_data(request, project_slug):
         # --- FIN DE LA CORRECCIÓN CLAVE ---
 
         progress = 100 if task.status == Task.Status.DONE else 0
-        
+        custom_class = f'bar-{task.status.lower()}'
+        assigne_name = task.assignee.get_full_name() if task.assignee else 'Sin Asignar'
         gantt_tasks.append({
             'id': f'task_{task.id}',
             'name': task.title,
             'start': task.start_date.strftime('%Y-%m-%d'),
             'end': task.due_date.strftime('%Y-%m-%d'),
             'progress': progress,
-            'dependencies': dependencies_str # Pasamos el string, no la lista
+            'dependencies': dependencies_str,  # Pasamos el string, no la lista
+            'custom_class': custom_class,
+            'assignee': assigne_name,
         })
 
     return JsonResponse(gantt_tasks, safe=False)

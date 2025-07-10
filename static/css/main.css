@@ -365,3 +365,37 @@ form.bg-white {
     padding-bottom: 1rem;
     margin-bottom: 1rem;
 }
+
+/* --- Colores para las Barras del Gantt --- */
+.gantt .bar-backlog .bar,
+.gantt .bar-todo .bar {
+    fill: #6c757d; /* Gris para Backlog y Por Hacer */
+}
+
+.gantt .bar-in_progress .bar {
+    fill: #0d6efd; /* Azul para En Progreso */
+}
+
+.gantt .bar-done .bar {
+    fill: #198754; /* Verde para Completada */
+}
+
+.gantt .bar-paused .bar {
+    fill: #ffc107; /* Amarillo para Pausada */
+}
+
+.gantt .bar-canceled .bar {
+    fill: #dc3545; /* Rojo para Cancelada */
+    opacity: 0.6;
+}
+/* --- Estilos Definitivos para el Pop-up del Gantt --- */
+.gantt-container .popup-wrapper {
+    background: #ffffff !important; /* Forzamos un fondo blanco */
+    color: #212529 !important;      /* Forzamos un texto oscuro */
+    border: 1px solid #5f0000 !important; /* Añadimos un borde gris claro */
+}
+
+/* Opcional: Mejoramos la legibilidad del texto secundario dentro del pop-up */
+.gantt-container .popup-wrapper .text-muted {
+    color: #053a68 !important;
+}
