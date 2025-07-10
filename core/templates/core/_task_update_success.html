@@ -1,0 +1,5 @@
+{# 1. Este bloque reemplazará la tarjeta en el tablero Kanban #}
+{% include "core/_task_card.html" with task=task %}
+
+{# 2. Este bloque, gracias a hx-swap-oob, vaciará el modal, cerrándolo #}
+<div id="modal-container" hx-swap-oob="true"></div>

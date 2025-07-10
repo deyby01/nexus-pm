@@ -30,27 +30,41 @@ class ProjectForm(forms.ModelForm):
 
 class TaskForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        # Sacamos el workspace de los argumentos para usarlo despues
-        workspace = kwargs.pop('workspace', None)
+        # Sacamos el proyecto de los argumentos para usarlo después
+        project = kwargs.pop('project', None)
         super().__init__(*args, **kwargs)
-        
-        if workspace:
-            # Filtramos el queryset para que solo muestre miembros del workspace actual
-            self.fields['assignee'].queryset = workspace.members.all()
+
+        if project:
+            # Filtramos el queryset para que 'assignee' solo muestre miembros del workspace
+            self.fields['assignee'].queryset = project.workspace.members.all()
+            
+            # NUEVO: Filtramos 'predecessors' para mostrar solo tareas del MISMO proyecto
+            self.fields['predecessors'].queryset = project.tasks.all()
+
+            # Opcional: Excluimos la tarea actual de la lista de posibles predecesoras
+            if self.instance and self.instance.pk:
+                self.fields['predecessors'].queryset = self.fields['predecessors'].queryset.exclude(pk=self.instance.pk)
 
     class Meta:
         model = Task
-        fields = ['title', 'description', 'status', 'assignee', 'due_date']
+        # Añadimos los nuevos campos a la lista
+        fields = ['title', 'description', 'status', 'priority', 'assignee', 'start_date', 'due_date', 'predecessors']
         widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
             'due_date': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 3}),
+            # Hacemos que el campo de predecesoras sea un multiselector más amigable
+            'predecessors': forms.SelectMultiple(attrs={'class': 'form-select'}),
         }
         labels = {
             'title': 'Título de la Tarea',
             'description': 'Descripción',
-            'status': 'Estado Inicial',
+            'status': 'Estado',
+            'priority': 'Prioridad', # Nueva etiqueta
             'assignee': 'Asignar a',
+            'start_date': 'Fecha de Inicio',
             'due_date': 'Fecha Límite',
+            'predecessors': 'Depende de (Tareas Predecesoras)', # Nueva etiqueta
         }
         
     

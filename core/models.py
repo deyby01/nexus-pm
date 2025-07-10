@@ -115,7 +115,8 @@ class Project(models.Model):
         
     
 class Task(models.Model):
-    """ Representa una tarea dentro de un proyecto. """
+    """Representa una tarea dentro de un Proyecto."""
+    # --- Choices (Opciones predefinidas) ---
     class Status(models.TextChoices):
         BACKLOG = 'BACKLOG', 'Backlog'
         TODO = 'TODO', 'Por Hacer'
@@ -123,24 +124,47 @@ class Task(models.Model):
         PAUSED = 'PAUSED', 'Pausada'
         DONE = 'DONE', 'Completada'
         CANCELED = 'CANCELED', 'Cancelada'
-    
+        
+    class Priority(models.TextChoices):
+        LOW = 'LOW', 'Baja'
+        MEDIUM = 'MEDIUM', 'Media'
+        HIGH = 'HIGH', 'Alta'
+        CRITICAL = 'CRITICAL', 'Crítica'
+
+    # --- Campos del Modelo ---
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=250)
     description = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.BACKLOG)
     assignee = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='tasks'
     )
+    start_date = models.DateField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
     slug = models.SlugField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
+    # --- NUEVOS CAMPOS ---
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.MEDIUM,
+        db_index=True # Añadimos un índice para mejorar la velocidad de las búsquedas por prioridad
+    )
+    predecessors = models.ManyToManyField(
+        'self', # Se relaciona consigo mismo (una Tarea depende de otra Tarea)
+        blank=True,
+        symmetrical=False, # La relación no es mutua (si A es predecesora de B, B no lo es de A)
+        related_name='successors' # Nombre para la relación inversa
+    )
+    # --- FIN DE NUEVOS CAMPOS ---
+
     class Meta:
-        # El slug debe ser unico dentro de un mismo proyecto
+        ordering = ['-created_at'] # Ordenamos por defecto por fecha de creación
         unique_together = ('project', 'slug')
     
     def __str__(self):
@@ -169,6 +193,7 @@ class Task(models.Model):
         for log in self.timelogs.filter(end_time__isnull=False):
             total_duration += log.duration
         return total_duration
+    
     
 
 class Comment(models.Model):

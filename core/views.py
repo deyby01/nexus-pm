@@ -292,6 +292,16 @@ def update_task_status(request):
         if not can_user_interact_with_project(task.project, request.user):
             return HttpResponseForbidden("El proyecto esta vencido y no puedes modificarlo.")
         
+        # --- INICIO DE LA LÓGICA DE DEPENDENCIA ---
+        # Solo verificamos si se intenta mover a "En Progreso"
+        if new_status_key == Task.Status.IN_PROGRESS:
+            # Buscamos si hay alguna tarea predecesora que NO esté completada
+            incomplete_predecessors = task.predecessors.exclude(status=Task.Status.DONE)
+            if incomplete_predecessors.exists():
+                # Si existen, devolvemos un error y no hacemos el cambio
+                return HttpResponse("No se puede iniciar esta tarea. Una o más de sus predecesoras no están completadas.", status=400) # 400 Bad Request
+        # --- FIN DE LA LÓGICA DE DEPENDENCIA ---
+        
         # Guardamos el estado anterior para la notificacion
         old_status_label = task.get_status_display()
         
@@ -358,11 +368,10 @@ def create_task(request, project_slug):
         return HttpResponseForbidden("El proyecto esta vencido y no puedes crear tareas.")
     
     if request.method == 'POST':
-        form = TaskForm(request.POST, workspace=project.workspace)
+        form = TaskForm(request.POST, project=project)
         if form.is_valid():
             task = form.save(commit=False)
             task.project = project
-            # Si el status viene del formulario, lo usamos. Si no, default.
             if not task.status:
                 task.status = Task.Status.BACKLOG
             task.save()
@@ -370,11 +379,9 @@ def create_task(request, project_slug):
             # Logica de actividad
             verb_text = f'creó la tarea "{task.title}"'
             Activity.objects.create(project=project, actor=request.user, verb=verb_text, target=task)
-            # Fin logica actividad
             
             # Logica de notificacion
             if task.assignee is not None:
-                # Nos aseguramos de no notificar al autor de la tarea
                 if task.assignee != request.user:
                     Notification.objects.create(
                         recipient=task.assignee,
@@ -382,55 +389,59 @@ def create_task(request, project_slug):
                         verb='te asignó la tarea',
                         target=task
                     )
-            # Fin de la logica de notificacion
-            
-            # Devolvemos la tarjeta de la nueva tarea para que htmx la inserte
+                    
             return render(request, 'core/_task_card.html', {'task': task})
-    
-    # Si la petición es GET, devolvemos el formulario vacío para el modal
-    form = TaskForm(workspace=project.workspace, initial={'status': 'BACKLOG'})
-    return render(request, 'core/_task_form.html', {'form': form, 'project': project})
+        
+        # Si el form no es válido, se renderiza el formulario con errores
+        return render(request, 'core/_task_form.html', {'form': form, 'project': project})
+
+    else: # Peticion GET
+        form = TaskForm(project=project, initial={'status': 'BACKLOG'})
+        return render(request, 'core/_task_form.html', {'form': form, 'project': project})
 
 
 @login_required
 def task_detail_update(request, pk):
     task = get_object_or_404(Task, pk=pk, project__workspace__members=request.user)
-    
-    # Define quién puede editar: el dueño del workspace o la persona asignada a la tarea
     can_edit = (request.user == task.project.workspace.owner or request.user == task.assignee)
 
     if request.method == 'POST':
-        if not can_user_interact_with_project(task.project, request.user):
-            return HttpResponseForbidden("El proyecto está vencido y no puedes editar la tarea.")
-        
-        # Solo procesa el formulario si el usuario tiene permiso de edición
-        if not can_edit:
-            return HttpResponseForbidden("No tienes permiso para editar los detalles de esta tarea.")
+        if not can_user_interact_with_project(task.project, request.user) or not can_edit:
+            return HttpResponseForbidden("No tienes permiso para editar esta tarea.")
 
-        form = TaskForm(request.POST, instance=task, workspace=task.project.workspace)
+        form = TaskForm(request.POST, instance=task, project=task.project)
+
+        # Verificamos si hay algún error de dependencia ANTES de validar el resto
+        new_status = request.POST.get('status')
+        if new_status == Task.Status.IN_PROGRESS:
+            incomplete_predecessors = task.predecessors.exclude(status=Task.Status.DONE)
+            if incomplete_predecessors.exists():
+                form.add_error('status', "No se puede poner en progreso. Hay tareas predecesoras sin completar.")
+
         if form.is_valid():
+            # --- LÓGICA DE ÉXITO ---
             updated_task = form.save()
-            return render(request, 'core/_task_card.html', {'task': updated_task})
-    else:
-        form = TaskForm(instance=task, workspace=task.project.workspace)
-        # Si el usuario no puede editar, deshabilita todos los campos del formulario
+            # Lógica de notificación de asignación (si es necesaria)...
+            
+            # Devolvemos la plantilla especial que actualiza la tarjeta Y cierra el modal
+            return render(request, 'core/_task_update_success.html', {'task': updated_task})
+
+    else: # Petición GET
+        form = TaskForm(instance=task, project=task.project)
         if not can_edit:
             for field in form.fields.values():
                 field.widget.attrs['disabled'] = True
-    
-    # Verificamos si hay un cronometro activo para el usuario y la tarea.
-    is_timer_active = TimeLog.objects.filter(
-        task=task,
-        user=request.user,
-        end_time__isnull=True
-    ).exists()
-    
+
+    # --- LÓGICA DE FALLO O GET ---
+    # Preparamos el contexto para renderizar el modal, ya sea por primera vez (GET)
+    # o porque el formulario tuvo errores (POST inválido)
+    is_timer_active = TimeLog.objects.filter(task=task, user=request.user, end_time__isnull=True).exists()
     context = {
         'form': form,
         'task': task,
         'comment_form': CommentForm(),
-        'can_edit': can_edit, # Pasamos la variable a la plantilla
-        'is_timer_active': is_timer_active,  # Indicamos si el cronómetro está activo
+        'can_edit': can_edit,
+        'is_timer_active': is_timer_active,
     }
     return render(request, 'core/_task_detail_modal.html', context)
 
@@ -516,38 +527,43 @@ class NotificationListView(LoginRequiredMixin, ListView):
         return self.request.user.notifications.all()
     
     
-def project_gantt_data(request, project_slug):
-    """
-    Prepara y devuelve los datos de las tareas para el gráfico Gantt.
-    """
-    project = get_object_or_404(Project, slug=project_slug, workspace__members=request.user)
-    # Filtramos tareas que tengan fecha de inicio (created_at) y fecha limite (due_date)
-    tasks = project.tasks.filter(due_date__isnull=False).order_by('due_date')
-    # Transformamos las tareas al formato que espera Frappe Gantt
-    gantt_tasks = []
-    for task in tasks:
-        progress = 100 if task.status == Task.Status.DONE else 0
-        gantt_tasks.append({
-            'id': f'task_{task.id}',
-            'name': task.title,
-            'start': task.created_at.strftime('%Y-%m-%d'),
-            'end': task.due_date.strftime('%Y-%m-%d'),
-            'progress': progress,
-        })
-        
-    return JsonResponse(gantt_tasks, safe=False)
-
 
 class ProjectGanttView(LoginRequiredMixin, DetailView):
     model = Project
-    slug_url_kwarg = 'project_slug'
     template_name = 'core/project_gantt.html'
     context_object_name = 'project'
-    
+    slug_url_kwarg = 'project_slug'
+
     def get_queryset(self):
-        # Filtro de seguridad
         return Project.objects.filter(workspace__members=self.request.user)
     
+
+def project_gantt_data(request, project_slug):
+    project = get_object_or_404(Project, slug=project_slug, workspace__members=request.user)
+    tasks = project.tasks.filter(
+        start_date__isnull=False, 
+        due_date__isnull=False
+    ).order_by('start_date')
+
+    gantt_tasks = []
+    for task in tasks:
+        # --- INICIO DE LA CORRECCIÓN CLAVE ---
+        # Unimos los IDs de las predecesoras en un solo string separado por comas
+        dependencies_str = ",".join([f'task_{p.id}' for p in task.predecessors.all()])
+        # --- FIN DE LA CORRECCIÓN CLAVE ---
+
+        progress = 100 if task.status == Task.Status.DONE else 0
+        
+        gantt_tasks.append({
+            'id': f'task_{task.id}',
+            'name': task.title,
+            'start': task.start_date.strftime('%Y-%m-%d'),
+            'end': task.due_date.strftime('%Y-%m-%d'),
+            'progress': progress,
+            'dependencies': dependencies_str # Pasamos el string, no la lista
+        })
+
+    return JsonResponse(gantt_tasks, safe=False)
 
 
 @login_required

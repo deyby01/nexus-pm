@@ -13,8 +13,8 @@ from .views import (
     WorkspaceManageView,
     send_invitation, accept_invitation,
     project_create_form, project_create_action,
-    project_gantt_data, ProjectGanttView,
-    toggle_time_log,
+    ProjectGanttView,
+    toggle_time_log, project_gantt_data,
 )
 
 app_name = 'core'

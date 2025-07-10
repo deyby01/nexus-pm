@@ -1,14 +1,30 @@
-<div class="task-card mb-3 shadow-sm task-{{ task.status|slugify }}"
+<div class="task-card card mb-2 shadow-sm task-{{ task.status|slugify }}"
      id="task-{{ task.id }}"
      hx-get="{% url 'core:task_detail_update' pk=task.id %}"
      hx-target="#modal-container"
      hx-swap="innerHTML"
      style="cursor: pointer;">
-    <strong>{{ task.title }}</strong>
-    {% if task.assignee %}
-        <p class="mb-1 mt-2 text-muted">
-            <small><i class="bi bi-person-circle me-1"></i>{{ task.assignee.get_full_name }}</small>
-        </p>
-    {% endif %}
-    <p class="mb-0"><small><i class="bi bi-calendar-event me-1"></i>Límite: {{ task.due_date|default:"N/A" }}</small></p>
+    <div class="card-body p-2">
+        <div class="d-flex justify-content-between align-items-start">
+            <strong class="card-title mb-1">{{ task.title }}</strong>
+            
+            {% if task.priority == 'CRITICAL' %}
+                <span class="badge bg-danger">Crítica</span>
+            {% elif task.priority == 'HIGH' %}
+                <span class="badge bg-warning text-dark">Alta</span>
+            {% elif task.priority == 'MEDIUM' %}
+                <span class="badge bg-info text-dark">Media</span>
+            {% else %}
+                <span class="badge bg-secondary">Baja</span>
+            {% endif %}
+            </div>
+        
+        {% if task.assignee %}
+            <p class="mb-1 mt-2 text-muted">
+                <small><i class="bi bi-person-circle"></i> {{ task.assignee.get_full_name }}</small>
+            </p>
+        {% endif %}
+
+        <p class="mb-0"><small>Límite: {{ task.due_date|default:"N/A" }}</small></p>
+    </div>
 </div>
