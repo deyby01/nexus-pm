@@ -394,8 +394,14 @@ form.bg-white {
     color: #212529 !important;      /* Forzamos un texto oscuro */
     border: 1px solid #5f0000 !important; /* Añadimos un borde gris claro */
 }
-
 /* Opcional: Mejoramos la legibilidad del texto secundario dentro del pop-up */
 .gantt-container .popup-wrapper .text-muted {
     color: #053a68 !important;
+}
+/* --- Estilos para resaltar los meses en el Gantt --- */
+.gantt .upper-text {
+    font-size: 14px;      /* Hacemos la letra un poco más grande */
+    font-weight: 800;     /* La ponemos en semigruesa (bold) */
+    text-transform: uppercase; /* La transformamos a mayúsculas */
+    fill: #021127;        /* Le damos un color de texto más oscuro */
 }

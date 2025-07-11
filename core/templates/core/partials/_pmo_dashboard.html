@@ -1,0 +1,22 @@
+<div class="row">
+    <div class="col-md-6">
+        <h4 class="mb-3">Tareas Vencidas</h4>
+        <div class="list-group">
+            {% for task in overdue_tasks %}
+                <a href="{{ task.get_absolute_url }}" class="list-group-item list-group-item-action list-group-item-danger">{{ task.title }} (Proyecto: {{ task.project.name }})</a>
+            {% empty %}
+                <p class="text-muted">¡Excelente! No hay tareas vencidas.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h4 class="mb-3">Tareas en Riesgo (Próximos 7 días)</h4>
+        <div class="list-group">
+            {% for task in at_risk_tasks %}
+                 <a href="{{ task.get_absolute_url }}" class="list-group-item list-group-item-action list-group-item-warning">{{ task.title }} (Vence: {{ task.due_date }})</a>
+            {% empty %}
+                <p class="text-muted">No hay tareas en riesgo para esta semana.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>

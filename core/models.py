@@ -43,16 +43,21 @@ class Workspace(models.Model):
             self.slug = base_slug
         super().save(*args, **kwargs)
     
+
+class Role(models.Model):
+    """ Define un rol que un usuario puede tener dentro de un workspace. """
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
     
+    def __str__(self):
+        return self.name
+
+
 class Membership(models.Model):
     """ Modelo intermedio para la relacion User-Workspace con rol."""
-    class Role(models.TextChoices):
-        ADMIN = 'admin', 'Admin'
-        MEMBER = 'member', 'Member'
-        
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='memberships')
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE)
-    role = models.CharField(max_length=10, choices=Role.choices, default=Role.MEMBER)
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, related_name='members')
     data_joined = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -60,7 +65,7 @@ class Membership(models.Model):
         unique_together = ('user', 'workspace')
         
     def __str__(self):
-        return f"{self.user.get_full_name()} en {self.workspace.name} ({self.get_role_display()})"
+        return f"{self.user.username} en {self.workspace.name} como {self.role.name if self.role else 'Sin Rol'}"
     
     
 class Project(models.Model):

@@ -9,6 +9,19 @@
         </a>
     </div>
 
+    {# --- INICIO DE LA SECCIÓN DE WIDGETS POR ROL --- #}
+    {% if is_pmo %}
+        {# Vista para el PMO: muestra tareas en riesgo y vencidas #}
+        {% include "core/partials/_pmo_dashboard.html" %}
+    {% else %}
+        {# Vista para otros roles (ej: Desarrollador): muestra tareas asignadas #}
+        {% include "core/partials/_developer_dashboard.html" %}
+    {% endif %}
+    {# --- FIN DE LA SECCIÓN DE WIDGETS POR ROL --- #}
+
+    <hr class="my-5">
+
+    {# --- INICIO DE LA LISTA DE WORKSPACES (TU CÓDIGO ORIGINAL) --- #}
     <h2 class="h4 mb-3 fw-semibold text-dark"><i class="bi bi-house-door-fill me-2 text-primary"></i>Mis Workspaces</h2>
     <div class="row">
         {% for workspace in owned_workspaces %}
@@ -80,5 +93,6 @@
             </div>
         {% endfor %}
     </div>
+    {# --- FIN DE LA LISTA DE WORKSPACES --- #}
 </div>
 {% endblock %}

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.shortcuts import render
 from django.views.generic import ListView, CreateView, DetailView, TemplateView
 from django.shortcuts import get_object_or_404, redirect
@@ -21,17 +22,47 @@ class LandingPageView(TemplateView):
 
 class WorkspaceListView(LoginRequiredMixin, ListView):
     model = Workspace
-    template_name = 'core/workspace_list.html'
-    context_object_name = 'workspaces'
-    
+    template_name = 'core/dashboard.html'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        
-        # Obtenemos los workspaces donde el usuario es el dueño
+
+        # --- 1. LÓGICA PARA LISTAR WORKSPACES (TU CÓDIGO CORRECTO) ---
+        # Esto es necesario para TODOS los roles.
         context['owned_workspaces'] = Workspace.objects.filter(owner=user)
-        # Obtenemos los workspaces donde el usuario es miembro, pero no el dueño
         context['shared_workspaces'] = user.workspaces.exclude(owner=user)
+
+        # --- 2. LÓGICA PARA WIDGETS POR ROL ---
+        # Verificamos si el usuario tiene el rol de PMO
+        is_pmo = user.memberships.filter(role__name='PMO').exists()
+        context['is_pmo'] = is_pmo
+
+        if is_pmo:
+            # Obtenemos todos los proyectos de los workspaces que el usuario posee
+            # Nota: Podríamos cambiar esta lógica para incluir workspaces donde es PMO pero no dueño
+            workspaces = Workspace.objects.filter(owner=user)
+            all_projects = Project.objects.filter(workspace__in=workspaces)
+            
+            # Buscamos tareas en riesgo
+            today = timezone.now().date()
+            next_week = today + timedelta(days=7)
+            context['at_risk_tasks'] = Task.objects.filter(
+                project__in=all_projects,
+                due_date__gte=today,
+                due_date__lte=next_week
+            ).exclude(status=Task.Status.DONE)
+            
+            # Buscamos tareas ya vencidas
+            context['overdue_tasks'] = Task.objects.filter(
+                project__in=all_projects,
+                due_date__lt=today
+            ).exclude(status=Task.Status.DONE)
+
+        else:
+            # Mostramos las tareas asignadas al usuario actual
+            context['my_tasks'] = Task.objects.filter(assignee=user).exclude(status=Task.Status.DONE).order_by('due_date')
+
         return context
 
 class WorkspaceCreateView(LoginRequiredMixin, CreateView):

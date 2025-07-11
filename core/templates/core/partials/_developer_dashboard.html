@@ -1,0 +1,15 @@
+<h4 class="mb-3">Mis Tareas Asignadas</h4>
+<div class="list-group">
+{% for task in my_tasks %}
+    <a href="{{ task.get_absolute_url }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+        <div>
+            <strong>{{ task.title }}</strong>
+            <br>
+            <small class="text-muted">Proyecto: {{ task.project.name }}</small>
+        </div>
+        <span class="badge bg-primary rounded-pill">{{ task.get_status_display }}</span>
+    </a>
+{% empty %}
+    <p class="text-muted">No tienes tareas asignadas. ¡Buen trabajo!</p>
+{% endfor %}
+</div>

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (User, Workspace, Membership, Project, Task,
-                     Invitation, Comment, Attachment, TimeLog, Activity, Notification)
+                     Invitation, Comment, Attachment, TimeLog, Activity, Notification,
+                     Role)
 
 
 # Para una mejor visualización, mostraremos los miembros en la pagina del Workspace
@@ -44,3 +45,4 @@ admin.site.register(Attachment)
 admin.site.register(TimeLog)
 admin.site.register(Activity)
 admin.site.register(Notification)
+admin.site.register(Role)
