@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation, TimeLog, Role
-from .forms import WorkspaceForm, ProjectForm, TaskForm, CommentForm, InvitationForm
+from .forms import WorkspaceForm, ProjectForm, TaskForm, CommentForm, InvitationForm, RoleForm
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -30,10 +30,11 @@ class WorkspaceListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        # --- 1. LÓGICA PARA LISTAR WORKSPACES (TU CÓDIGO CORRECTO) ---
+        # --- 1. LÓGICA PARA LISTAR WORKSPACES  ---
         # Esto es necesario para TODOS los roles.
         context['owned_workspaces'] = Workspace.objects.filter(owner=user)
         context['shared_workspaces'] = user.workspaces.exclude(owner=user)
+        context['my_tasks'] = Task.objects.filter(assignee=user).exclude(status=Task.Status.DONE).order_by('due_date')
 
         # --- 2. LÓGICA PARA WIDGETS POR ROL ---
         # Verificamos si el usuario tiene el rol de PMO
@@ -147,6 +148,8 @@ class WorkspaceManageView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['invitation_form'] = InvitationForm()
+        context['all_roles'] = Role.objects.all()
+        context['role_form'] = RoleForm()
         return context
     
 
@@ -707,3 +710,40 @@ class ProjectReportsView(LoginRequiredMixin, DetailView):
         context['workload_values'] = workload_values
         
         return context
+    
+    
+@login_required
+@require_POST
+def update_member_role(request, membership_id):
+    # Buscamos la membresía específica
+    membership = get_object_or_404(Membership, id=membership_id)
+    workspace = membership.workspace
+
+    # Verificación de seguridad: solo el dueño del workspace puede cambiar roles
+    if workspace.owner != request.user:
+        return HttpResponseForbidden("No tienes permiso para cambiar roles en este equipo.")
+
+    new_role_id = request.POST.get('role')
+    if new_role_id:
+        new_role = get_object_or_404(Role, id=new_role_id)
+        membership.role = new_role
+        membership.save()
+        messages.success(request, f"Se actualizó el rol de {membership.user.get_full_name()}.")
+    
+    return redirect('core:workspace_manage', workspace_slug=workspace.slug)
+
+
+@login_required
+@require_POST
+def create_role(request, workspace_slug):
+    workspace = get_object_or_404(Workspace, slug=workspace_slug, owner=request.user)
+    form = RoleForm(request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, f"Se ha creado el nuevo rol '{form.cleaned_data['name']}'.")
+    else:
+        # Si hay errores (ej: el rol ya existe), los mostramos
+        for error in form.errors.values():
+            messages.error(request, error)
+            
+    return redirect('core:workspace_manage', workspace_slug=workspace.slug)

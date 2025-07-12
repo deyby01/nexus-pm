@@ -16,6 +16,7 @@ from .views import (
     ProjectGanttView,
     toggle_time_log, project_gantt_data,
     TeamDirectoryView, ProjectReportsView,
+    update_member_role, create_role,
 )
 
 app_name = 'core'
@@ -26,6 +27,7 @@ urlpatterns = [
     path('create/', WorkspaceCreateView.as_view(), name='workspace_create'),
     path('notifications/', NotificationListView.as_view(), name='notification_list'),
     path('invitations/accept/<uuid:token>/', accept_invitation, name='accept_invitation'),
+    path('memberships/<int:membership_id>/update-role/', update_member_role, name='update_member_role'),
     
     # ---- Rutas de API (Endpoints para htmx) ----
     path('api/tasks/update-status/', update_task_status, name='update_task_status'),
@@ -35,6 +37,7 @@ urlpatterns = [
     path('<slug:workspace_slug>/manage/', WorkspaceManageView.as_view(), name='workspace_manage'),
     path('<slug:workspace_slug>/team/', TeamDirectoryView.as_view(), name='team_directory'),
     path('<slug:workspace_slug>/invite/', send_invitation, name='send_invitation'),
+    path('<slug:workspace_slug>/roles/create/', create_role, name='create_role'),
     path('<slug:workspace_slug>/projects/create-form/', project_create_form, name='project_create_form'),
     path('<slug:workspace_slug>/projects/create-action/', project_create_action, name='project_create_action'),
     path('<slug:workspace_slug>/', WorkspaceDetailView.as_view(), name='workspace_detail'), # Genérica al final del grupo

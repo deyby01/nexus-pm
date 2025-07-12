@@ -27,7 +27,18 @@
     <hr>
 
     <h2 class="h4 mb-3 fw-semibold text-dark"><i class="bi bi-kanban-fill me-2 text-primary"></i>Proyectos</h2>
-
+    <div class="card bg-light border-0 mb-4">
+        <div class="card-body">
+            <h6 class="card-title text-muted mb-0">
+                <i class="bi bi-question-circle-fill me-2"></i>
+                Leyenda de Estados:
+                <span class="badge text-bg-info ms-2">Terminado</span>
+                <span class="badge text-bg-success ms-2">En Plazo</span>
+                <span class="badge text-bg-warning ms-2">En Riesgo (vence en &lt; 7 días)</span>
+                <span class="badge text-bg-danger ms-2">Vencido</span>
+            </h6>
+        </div>
+    </div>
     <div class="row" id="project-list"> 
         {% for project in workspace.projects.all %}
             {% include "core/_project_card.html" with project=project %}

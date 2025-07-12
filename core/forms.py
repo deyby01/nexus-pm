@@ -1,5 +1,5 @@
 from django import forms
-from .models import Workspace, Project, Task, Attachment, Invitation
+from .models import Workspace, Project, Task, Attachment, Invitation, Role
 
 
 class WorkspaceForm(forms.ModelForm):
@@ -103,3 +103,13 @@ class CustomSignupForm(forms.Form):
         user.last_name = self.cleaned_data['last_name']
         user.save()
         return user
+    
+    
+class RoleForm(forms.ModelForm):
+    class Meta:
+        model = Role
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }

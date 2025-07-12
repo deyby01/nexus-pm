@@ -13,10 +13,9 @@
     {% if is_pmo %}
         {# Vista para el PMO: muestra tareas en riesgo y vencidas #}
         {% include "core/partials/_pmo_dashboard.html" %}
-    {% else %}
-        {# Vista para otros roles (ej: Desarrollador): muestra tareas asignadas #}
-        {% include "core/partials/_developer_dashboard.html" %}
+        <hr class="my-4">
     {% endif %}
+        {% include "core/partials/_user_tasks_widget.html" %}
     {# --- FIN DE LA SECCIÓN DE WIDGETS POR ROL --- #}
 
     <hr class="my-5">
