@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from collections import defaultdict
+from django.db.models import Count
 
 User = get_user_model()
 
@@ -657,4 +658,52 @@ class TeamDirectoryView(LoginRequiredMixin, DetailView):
             members_by_role[membership.role.name].append(membership.user)
         
         context['grouped_members'] = dict(members_by_role)
+        return context
+    
+    
+class ProjectReportsView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = 'core/project_reports.html'
+    context_object_name = 'project'
+    slug_url_kwarg = 'project_slug'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.get_object()
+        
+        # Logica para los widgets de puntos criticos
+        today = timezone.now().date()
+        
+        # Tareas vencidas 
+        context['overdue_tasks'] = project.tasks.filter(
+            due_date__lt=today
+        ).exclude(status=Task.Status.DONE)
+        
+        # Tareas en riesgo (Vencen en los procimos 7 dias)
+        next_week = today + timedelta(days=7)
+        context['at_risk_tasks'] = project.tasks.filter(
+            due_date__gte=today,
+            due_date__lte=next_week
+        ).exclude(status=Task.Status.DONE)
+        
+        # Reporte de carga de trabajo
+        workload = project.tasks.exclude(
+            status__in=[Task.Status.DONE, Task.Status.CANCELED]
+        ).filter(
+            assignee__isnull=False
+        ).values(
+            'assignee__first_name', 'assignee__last_name' # Obtenemos nombre y apellido
+        ).annotate(
+            task_count=Count('id')
+        ).order_by('-task_count')
+        
+        context['workload_data'] = workload
+        
+        # Preparamos los datos para el gráfico
+        workload_labels = [f"{w['assignee__first_name']} {w['assignee__last_name']}" for w in workload]
+        workload_values = [w['task_count'] for w in workload]
+        
+        context['workload_labels'] = workload_labels
+        context['workload_values'] = workload_values
+        
         return context

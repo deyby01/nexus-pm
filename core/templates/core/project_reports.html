@@ -1,0 +1,101 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2">Reportes del Proyecto: {{ project.name }}</h1>
+            <p class="text-muted">Análisis de estado y carga de trabajo.</p>
+        </div>
+        <a href="{% url 'core:project_detail' project_slug=project.slug %}" class="btn btn-outline-primary">
+            <i class="bi bi-kanban-fill me-1"></i>Volver al Kanban
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Tareas Vencidas</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for task in overdue_tasks %}
+                        <a href="{{ task.get_absolute_url }}" class="list-group-item list-group-item-action">
+                            <strong>{{ task.title }}</strong> (Venció: {{ task.due_date }})
+                        </a>
+                    {% empty %}
+                        <div class="card-body text-center text-muted">
+                            <p class="mb-0">¡Felicidades! No hay tareas vencidas.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-hourglass-split me-2"></i>Tareas en Riesgo</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for task in at_risk_tasks %}
+                        <a href="{{ task.get_absolute_url }}" class="list-group-item list-group-item-action">
+                            <strong>{{ task.title }}</strong> (Vence: {{ task.due_date }})
+                        </a>
+                    {% empty %}
+                        <div class="card-body text-center text-muted">
+                            <p class="mb-0">No hay tareas en riesgo para la próxima semana.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 mt-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-check-fill me-2"></i>Carga de Trabajo (Tareas Activas)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="workloadChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('workloadChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar', // Tipo de gráfico: barras
+            data: {
+                labels: {{ workload_labels|safe }},
+                datasets: [{
+                    label: 'Nº de Tareas Asignadas',
+                    data: {{ workload_values|safe }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y', // <-- Esto hace que el gráfico sea horizontal
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false // Ocultamos la leyenda para un look más limpio
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true // El eje X empieza en 0
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

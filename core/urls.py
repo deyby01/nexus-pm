@@ -15,7 +15,7 @@ from .views import (
     project_create_form, project_create_action,
     ProjectGanttView,
     toggle_time_log, project_gantt_data,
-    TeamDirectoryView,
+    TeamDirectoryView, ProjectReportsView,
 )
 
 app_name = 'core'
@@ -42,6 +42,7 @@ urlpatterns = [
     # ---- Rutas de Proyectos y Tareas (Siempre usan un identificador único) ----
     path('projects/<slug:project_slug>/', ProjectDetailView.as_view(), name='project_detail'),
     path('projects/<slug:project_slug>/gantt/', ProjectGanttView.as_view(), name='project_gantt'),
+    path('projects/<slug:project_slug>/reports/', ProjectReportsView.as_view(), name='project_reports'),
     path('projects/<slug:project_slug>/tasks/create/', create_task, name='task_create'),
     path('tasks/<int:pk>/', task_detail_update, name='task_detail_update'),
     path('tasks/<int:task_pk>/add-comment/', add_comment, name='add_comment'),
