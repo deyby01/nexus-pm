@@ -4,7 +4,7 @@ from django.views.generic import ListView, CreateView, DetailView, TemplateView
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation, TimeLog
+from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation, TimeLog, Role
 from .forms import WorkspaceForm, ProjectForm, TaskForm, CommentForm, InvitationForm
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from collections import defaultdict
 
 User = get_user_model()
 
@@ -69,18 +70,20 @@ class WorkspaceCreateView(LoginRequiredMixin, CreateView):
     model = Workspace
     form_class = WorkspaceForm
     template_name = 'core/workspace_form.html'
-    success_url = reverse_lazy('workspace_list')
+    success_url = reverse_lazy('core:workspace_list')
     
     def form_valid(self, form):
         # Asigna el owner del workspace al usuario actual
         form.instance.owner = self.request.user
         # llama al método form_valid del padre para guardar el workspace
         response = super().form_valid(form)
+        # 3. Obtenemos el rol 'Dueño' (o lo creamos si no existe)
+        owner_role, created = Role.objects.get_or_create(name='Dueño')
         # Crea la membresia para el owner, asignandole el rol de 'ADMIN'
         Membership.objects.create(
             user=self.request.user, 
             workspace=self.object,  # Es el workspace recién creado
-            role=Membership.Role.ADMIN)
+            role=owner_role)
         
         return response
     
@@ -621,3 +624,37 @@ def toggle_time_log(request, task_pk):
 
     # Devolvemos solo el componente del cronómetro actualizado
     return render(request, 'core/_time_tracker_component.html', context)
+
+
+class TeamDirectoryView(LoginRequiredMixin, DetailView):
+    model = Workspace
+    template_name = 'core/team_directory.html'
+    context_object_name = 'workspace'
+    slug_url_kwarg = 'workspace_slug'
+
+    def dispatch(self, request, *args, **kwargs):
+        workspace = self.get_object()
+        try:
+            membership = request.user.memberships.get(workspace=workspace)
+            # CAMBIAMOS LA LÓGICA: ahora revisa el campo booleano
+            if not membership.role.is_admin_role:
+                messages.error(request, "No tienes permiso para ver el directorio del equipo.")
+                return redirect('core:workspace_detail', workspace_slug=workspace.slug)
+        except (Membership.DoesNotExist, AttributeError):
+            # Capturamos también AttributeError por si el rol es Nulo
+            messages.error(request, "No eres miembro o no tienes un rol asignado en este equipo.")
+            return redirect('core:workspace_list')
+        
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        workspace = self.get_object()
+        
+        # Agrupamos los miembros por rol
+        members_by_role = defaultdict(list)
+        for membership in workspace.membership_set.all().order_by('role__name'):
+            members_by_role[membership.role.name].append(membership.user)
+        
+        context['grouped_members'] = dict(members_by_role)
+        return context

@@ -15,6 +15,7 @@ from .views import (
     project_create_form, project_create_action,
     ProjectGanttView,
     toggle_time_log, project_gantt_data,
+    TeamDirectoryView,
 )
 
 app_name = 'core'
@@ -32,6 +33,7 @@ urlpatterns = [
 
     # ---- Rutas de Workspaces (Específicas primero, genéricas después) ----
     path('<slug:workspace_slug>/manage/', WorkspaceManageView.as_view(), name='workspace_manage'),
+    path('<slug:workspace_slug>/team/', TeamDirectoryView.as_view(), name='team_directory'),
     path('<slug:workspace_slug>/invite/', send_invitation, name='send_invitation'),
     path('<slug:workspace_slug>/projects/create-form/', project_create_form, name='project_create_form'),
     path('<slug:workspace_slug>/projects/create-action/', project_create_action, name='project_create_action'),
