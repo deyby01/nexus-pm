@@ -31,6 +31,20 @@
             </form>
             <hr class="my-4">
             <h4>Comentarios</h4>
+            <div id="comment-list" class="list-group mb-3">
+                {% for comment in task.comments.all %}
+                    {% include "core/_comment_item.html" with comment=comment %}
+                {% endfor %}
             </div>
+            
+            <form hx-post="{% url 'core:add_comment' task_pk=task.pk %}"
+                  hx-encoding="multipart/form-data"
+                  hx-target="#comment-list"
+                  hx-swap="beforeend"
+                  hx-on="htmx:afterRequest: this.reset()">
+                {% csrf_token %}
+                {{ comment_form.as_p }}
+                <button type="submit" class="btn btn-secondary btn-sm mt-2">Enviar Comentario</button>
+            </form>
     </div>
 </div>
