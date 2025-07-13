@@ -95,6 +95,91 @@
     <script src="https://unpkg.com/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
 
     {% block extra_js %}
+        <script>
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    // Esta función se ejecuta CADA VEZ que htmx termina de cargar contenido.
+
+    // Verificamos si el contenido se cargó en nuestro modal.
+    if (evt.detail.target.id === 'modal-container') {
+        
+        // Si es así, definimos y ejecutamos la lógica del cronómetro.
+        let liveTimerInterval = null;
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+        }
+
+        async function toggleTimer(taskPk) {
+            const url = `/workspaces/tasks/${taskPk}/toggle-time/`;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {'X-CSRFToken': csrfToken, 'Content-Type': 'application/json'}
+                });
+                if (!response.ok) throw new Error('Falló la petición al servidor.');
+                
+                const data = await response.json();
+                const controls = document.getElementById('time-tracker-controls');
+                if(controls) {
+                    controls.dataset.isActive = (data.status === 'started').toString();
+                    if (data.start_time) controls.dataset.startTime = data.start_time;
+                }
+                if(data.total_logged_time) {
+                    const totalTimeDisplay = document.getElementById('total-time-display');
+                    if(totalTimeDisplay) totalTimeDisplay.textContent = `Tiempo total: ${data.total_logged_time}`;
+                }
+                
+                setupTimeTracker();
+            } catch (error) {
+                console.error("Error en toggleTimer:", error);
+            }
+        }
+
+        function setupTimeTracker() {
+            const controls = document.getElementById('time-tracker-controls');
+            if (!controls) return;
+
+            const taskPk = controls.dataset.taskPk;
+            const isActive = controls.dataset.isActive === 'true';
+            const startTime = controls.dataset.startTime;
+
+            controls.innerHTML = '';
+            if (liveTimerInterval) clearInterval(liveTimerInterval);
+
+            if (isActive) {
+                const timerDisplay = document.createElement('strong');
+                timerDisplay.id = 'live-timer';
+                const stopButton = document.createElement('button');
+                stopButton.className = 'btn btn-danger btn-sm ms-3';
+                stopButton.innerHTML = '<i class="bi bi-stop-circle-fill me-1"></i>Detener';
+                controls.append(timerDisplay, stopButton);
+
+                const startDate = new Date(startTime);
+                liveTimerInterval = setInterval(() => {
+                    const seconds = Math.floor((new Date() - startDate) / 1000);
+                    timerDisplay.textContent = formatTime(seconds);
+                }, 1000);
+                stopButton.onclick = () => toggleTimer(taskPk);
+
+            } else {
+                const startButton = document.createElement('button');
+                startButton.className = 'btn btn-success btn-sm';
+                startButton.innerHTML = '<i class="bi bi-play-circle-fill me-1"></i>Iniciar Tiempo';
+                controls.appendChild(startButton);
+                startButton.onclick = () => toggleTimer(taskPk);
+            }
+        }
+
+        // Finalmente, llamamos a la función para que dibuje el botón.
+        setupTimeTracker();
+    }
+});
+</script>
     {% endblock %}
 </body>
 </html>

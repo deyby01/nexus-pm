@@ -128,7 +128,7 @@
     {% if not is_locked %}
         <script src="{% static 'js/kanban.js' %}"></script>
     {% endif %}
-    <script>
+    {{ block.super }} <script>
         document.addEventListener('DOMContentLoaded', function () {
             const ctx = document.getElementById('taskStatusChart');
 

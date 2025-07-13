@@ -2,47 +2,35 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="h5">Editar Tarea</h2>
-            <button type="button" 
-                    onclick="this.closest('.modal-overlay').remove()"
-                    class="btn-close" 
-                    aria-label="Close">X</button>
+            <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn-close"></button>
         </div>
-        <div class="modal-body" hx-target="this" hx-swap="outerHTML">
-
-            <div id="time-tracker-wrapper">
-                {% include "core/_time_tracker_component.html" %}
+        <div class="modal-body">
+            <div class="card bg-light border-0 mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Registro de Tiempo</h6>
+                            <small id="total-time-display" class="text-muted">Tiempo total: {{ task.total_logged_time }}</small>
+                        </div>
+                        <div id="time-tracker-controls" 
+                             data-task-pk="{{ task.pk }}" 
+                             data-is-active="{{ is_timer_active|yesno:'true,false' }}" 
+                             data-start-time="{{ active_log.start_time.isoformat|default:'' }}">
+                            </div>
+                    </div>
+                </div>
             </div>
-            <form hx-post="{% url 'core:task_detail_update' pk=task.pk %}"
-                  hx-target="#task-{{ task.id }}"
-                  hx-swap="outerHTML">
-                
+
+            <form hx-post="{% url 'core:task_detail_update' pk=task.pk %}" hx-target="#task-{{ task.id }}" hx-swap="outerHTML">
                 {% csrf_token %}
                 {{ form.as_p }}
                 <div class="d-flex justify-content-end gap-2 mt-3">
-                    {% if can_edit %}
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                    {% endif %}
+                    {% if can_edit %}<button type="submit" class="btn btn-primary">Guardar Cambios</button>{% endif %}
+                    <button type="button" class="btn btn-outline-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
                 </div>
             </form>
-
             <hr class="my-4">
             <h4>Comentarios</h4>
-            
-            <div id="comment-list" class="list-group mb-3">
-                {% for comment in task.comments.all %}
-                    {% include "core/_comment_item.html" with comment=comment %}
-                {% endfor %}
             </div>
-            
-            <form hx-post="{% url 'core:add_comment' task_pk=task.pk %}"
-                  hx-encoding="multipart/form-data"
-                  hx-target="#comment-list"
-                  hx-swap="beforeend"
-                  hx-on="htmx:afterRequest: this.reset()">
-                {% csrf_token %}
-                {{ comment_form.as_p }}
-                <button type="submit" class="btn btn-secondary btn-sm mt-2">Enviar Comentario</button>
-            </form>
-        </div>
     </div>
 </div>

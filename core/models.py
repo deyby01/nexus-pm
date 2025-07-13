@@ -200,7 +200,15 @@ class Task(models.Model):
             total_duration += log.duration
         return total_duration
     
-    
+    @property
+    def formatted_total_logged_time(self):
+        """ Devuelve el tiempo total registrado en un formato legible. """
+        total_seconds = int(self.total_logged_time.total_seconds())
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
+
 
 class Comment(models.Model):
     """ Representa un comentario en una tarea. """

@@ -440,46 +440,36 @@ def create_task(request, project_slug):
 
 @login_required
 def task_detail_update(request, pk):
+    # 1. Obtenemos los objetos principales al principio
     task = get_object_or_404(Task, pk=pk, project__workspace__members=request.user)
     can_edit = (request.user == task.project.workspace.owner or request.user == task.assignee)
+    active_log = TimeLog.objects.filter(task=task, user=request.user, end_time__isnull=True).first()
+    is_timer_active = active_log is not None
 
+    # 2. Manejamos la lógica del formulario POST
     if request.method == 'POST':
         if not can_user_interact_with_project(task.project, request.user) or not can_edit:
             return HttpResponseForbidden("No tienes permiso para editar esta tarea.")
-
-        form = TaskForm(request.POST, instance=task, project=task.project)
-
-        # Verificamos si hay algún error de dependencia ANTES de validar el resto
-        new_status = request.POST.get('status')
-        if new_status == Task.Status.IN_PROGRESS:
-            incomplete_predecessors = task.predecessors.exclude(status=Task.Status.DONE)
-            if incomplete_predecessors.exists():
-                form.add_error('status', "No se puede poner en progreso. Hay tareas predecesoras sin completar.")
-
-        if form.is_valid():
-            # --- LÓGICA DE ÉXITO ---
-            updated_task = form.save()
-            # Lógica de notificación de asignación (si es necesaria)...
             
-            # Devolvemos la plantilla especial que actualiza la tarjeta Y cierra el modal
+        form = TaskForm(request.POST, instance=task, project=task.project)
+        if form.is_valid():
+            updated_task = form.save()
             return render(request, 'core/_task_update_success.html', {'task': updated_task})
-
+        # Si el formulario NO es válido, la función continúa y renderiza el modal con los errores al final
     else: # Petición GET
         form = TaskForm(instance=task, project=task.project)
         if not can_edit:
             for field in form.fields.values():
                 field.widget.attrs['disabled'] = True
-
-    # --- LÓGICA DE FALLO O GET ---
-    # Preparamos el contexto para renderizar el modal, ya sea por primera vez (GET)
-    # o porque el formulario tuvo errores (POST inválido)
-    is_timer_active = TimeLog.objects.filter(task=task, user=request.user, end_time__isnull=True).exists()
+    
+    # 3. El contexto se crea aquí, asegurando que SIEMPRE tenga todas las variables
     context = {
         'form': form,
         'task': task,
         'comment_form': CommentForm(),
         'can_edit': can_edit,
         'is_timer_active': is_timer_active,
+        'active_log': active_log,
     }
     return render(request, 'core/_task_detail_modal.html', context)
 
@@ -611,23 +601,26 @@ def project_gantt_data(request, project_slug):
 @require_POST
 def toggle_time_log(request, task_pk):
     task = get_object_or_404(Task, pk=task_pk, project__workspace__members=request.user)
-
+    
     active_log = TimeLog.objects.filter(
         task=task, user=request.user, end_time__isnull=True
     ).first()
 
     if active_log:
+        # Si hay un log activo, lo detenemos
         active_log.end_time = timezone.now()
         active_log.save()
+        return JsonResponse({
+            'status': 'stopped',
+            'total_logged_time': task.formatted_total_logged_time
+        })
     else:
-        TimeLog.objects.create(task=task, user=request.user)
-
-    # Preparamos el contexto para el componente
-    is_timer_active = not active_log
-    context = {'task': task, 'is_timer_active': is_timer_active, 'user': request.user}
-
-    # Devolvemos solo el componente del cronómetro actualizado
-    return render(request, 'core/_time_tracker_component.html', context)
+        # Si no hay log activo, creamos uno nuevo
+        new_log = TimeLog.objects.create(task=task, user=request.user)
+        return JsonResponse({
+            'status': 'started',
+            'start_time': new_log.start_time.isoformat() # Enviamos la hora de inicio exacta
+        })
 
 
 class TeamDirectoryView(LoginRequiredMixin, DetailView):
