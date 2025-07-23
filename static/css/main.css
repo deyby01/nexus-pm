@@ -61,7 +61,7 @@ footer {
 
 /* Hero/Landing Page o pagina principal ------------------------------- */
 .hero-section {
-    background: linear-gradient(120deg, #232526 60%, #43d854 100%);
+    background: linear-gradient(120deg, #232526 50%, #43d854 120%);
     min-height: 350px;
     border-radius: 0 0 2.5rem 2.5rem;
     box-shadow: 0 8px 32px rgba(33,37,41,0.10);

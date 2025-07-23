@@ -80,7 +80,7 @@ class WorkspaceCreateView(LoginRequiredMixin, CreateView):
         # llama al método form_valid del padre para guardar el workspace
         response = super().form_valid(form)
         # 3. Obtenemos el rol 'Dueño' (o lo creamos si no existe)
-        owner_role, created = Role.objects.get_or_create(name='Dueño')
+        owner_role = Role.objects.get_or_create(name='Dueño')
         # Crea la membresia para el owner, asignandole el rol de 'ADMIN'
         Membership.objects.create(
             user=self.request.user, 
