@@ -37,6 +37,13 @@ class ProjectForm(forms.ModelForm):
             'budget': forms.NumberInput(attrs={'class': 'form-control'}),
             'manager': forms.Select(attrs={'class': 'form-select'}),
         }
+        labels = {
+            'name': 'Nombre del Proyecto',
+            'description': 'Descripción',
+            'deadline': 'Fecha Límite o Termino Proyecto',
+            'status': 'Estado',
+            'budget': 'Presupuesto',
+        }
 
 
 class TaskForm(forms.ModelForm):
