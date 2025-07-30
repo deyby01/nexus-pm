@@ -11,11 +11,10 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from .utils import can_user_interact_with_project
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from collections import defaultdict
-from django.db.models import Count
 
 User = get_user_model()
 
@@ -716,14 +715,14 @@ class ProjectReportsView(LoginRequiredMixin, DetailView):
         ).values(
             'assignee__first_name', 'assignee__last_name' # Obtenemos nombre y apellido
         ).annotate(
-            task_count=Count('id')
-        ).order_by('-task_count')
+            total_points=Sum('effort_points')
+        ).order_by('-total_points')
         
         context['workload_data'] = workload
         
         # Preparamos los datos para el gráfico
         workload_labels = [f"{w['assignee__first_name']} {w['assignee__last_name']}" for w in workload]
-        workload_values = [w['task_count'] for w in workload]
+        workload_values = [w['total_points'] for w in workload]
         
         context['workload_labels'] = workload_labels
         context['workload_values'] = workload_values

@@ -75,13 +75,14 @@ class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
         # Añadimos los nuevos campos a la lista
-        fields = ['title', 'description', 'status', 'priority', 'assignee', 'start_date', 'due_date', 'predecessors']
+        fields = ['title', 'description', 'status', 'priority', 'assignee', 'start_date', 'due_date', 'predecessors', 'effort_points']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'due_date': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 3}),
             # Hacemos que el campo de predecesoras sea un multiselector más amigable
             'predecessors': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'effort_points': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
         }
         labels = {
             'title': 'Título de la Tarea',
@@ -91,7 +92,8 @@ class TaskForm(forms.ModelForm):
             'assignee': 'Asignar a',
             'start_date': 'Fecha de Inicio',
             'due_date': 'Fecha Límite',
-            'predecessors': 'Depende de (Tareas Predecesoras)', # Nueva etiqueta
+            'predecessors': 'Depende de (Tareas Predecesoras)',
+            'effort_points': 'Puntos de Esfuerzo',
         }
         
     

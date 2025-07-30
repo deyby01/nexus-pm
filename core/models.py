@@ -155,6 +155,11 @@ class Task(models.Model):
     slug = models.SlugField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    effort_points = models.PositiveSmallIntegerField(
+        default=1,
+        help_text="Puntos de esfuerzo estimados para esta tarea (ej: 1, 2, 3, 5, 8)"
+    )
+
     # --- NUEVOS CAMPOS ---
     priority = models.CharField(
         max_length=10,
