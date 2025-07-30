@@ -72,12 +72,44 @@ class Membership(models.Model):
     
 class Project(models.Model):
     """ Representa un proyecto dentro de un workspace. """
+
+    class Status(models.TextChoices):
+        ACTIVE = 'ACTIVE', 'Activo'
+        ON_HOLD = 'ON_HOLD', 'En Pausa'
+        ARCHIVED = 'ARCHIVED', 'Archivado'
+
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='projects')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     deadline = models.DateField(blank=True, null=True)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # --- NUEVOS CAMPOS ---
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.ACTIVE
+    )
+    budget = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Presupuesto total estimado para el proyecto."
+    )
+    manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='managed_projects',
+        help_text="Usuario responsable del proyecto."
+    )
+    # --- FIN DE NUEVOS CAMPOS ---
+
+    class Meta:
+        ordering = ['name']
     
     def __str__(self):
         return self.name

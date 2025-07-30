@@ -16,16 +16,26 @@ class WorkspaceForm(forms.ModelForm):
         
         
 class ProjectForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        # Sacamos el workspace para poder usarlo en el filtro
+        workspace = kwargs.pop('workspace', None)
+        super().__init__(*args, **kwargs)
+
+        if workspace:
+            # Filtramos el queryset para que 'manager' solo muestre miembros del workspace actual
+            self.fields['manager'].queryset = workspace.members.all()
+            self.fields['manager'].label_from_instance = lambda obj: obj.get_full_name()
+
     class Meta:
         model = Project
-        fields = ['name', 'description', 'deadline']
+        fields = ['name', 'description', 'deadline', 'status', 'budget', 'manager']
         widgets = {
-            'deadline': forms.DateInput(attrs={'type': 'date'}),
-        }
-        labels = {
-            'name': 'Nombre del Proyecto',
-            'description': 'Descripción',
-            'deadline': 'Fecha Límite'
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'deadline': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'budget': forms.NumberInput(attrs={'class': 'form-control'}),
+            'manager': forms.Select(attrs={'class': 'form-select'}),
         }
 
 

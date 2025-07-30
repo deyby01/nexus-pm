@@ -109,7 +109,7 @@ class WorkspaceDetailView(LoginRequiredMixin, DetailView):
 @login_required
 def project_create_form(request, workspace_slug):
     workspace = get_object_or_404(Workspace, slug=workspace_slug, owner=request.user)
-    form = ProjectForm()
+    form = ProjectForm(workspace=workspace)
     return render(request, 'core/_project_create_modal.html', {'form': form, 'workspace': workspace})
 
 
