@@ -337,7 +337,7 @@ class FieldOption(models.Model):
 
 class CustomFieldValue(models.Model):
     """ El valor de un campo personalizado para una Tarea especifica. """
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='custom_fields_values')
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='custom_field_values')
     field = models.ForeignKey(CustomField, on_delete=models.CASCADE)
 
     # Guardamos el valor en campos especificos segun el tipo.

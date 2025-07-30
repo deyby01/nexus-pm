@@ -1,5 +1,6 @@
 from django import forms
-from .models import Workspace, Project, Task, Attachment, Invitation, Role
+from django.forms import widgets
+from .models import Workspace, Project, Task, Attachment, Invitation, Role, CustomField
 
 
 class WorkspaceForm(forms.ModelForm):
@@ -30,20 +31,46 @@ class ProjectForm(forms.ModelForm):
 
 class TaskForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        # Sacamos el proyecto de los argumentos para usarlo después
         project = kwargs.pop('project', None)
         super().__init__(*args, **kwargs)
 
         if project:
-            # Filtramos el queryset para que 'assignee' solo muestre miembros del workspace
+            # --- Lógica existente para assignee y predecessors ---
             self.fields['assignee'].queryset = project.workspace.members.all()
-            
-            # NUEVO: Filtramos 'predecessors' para mostrar solo tareas del MISMO proyecto
             self.fields['predecessors'].queryset = project.tasks.all()
-
-            # Opcional: Excluimos la tarea actual de la lista de posibles predecesoras
             if self.instance and self.instance.pk:
                 self.fields['predecessors'].queryset = self.fields['predecessors'].queryset.exclude(pk=self.instance.pk)
+
+            # --- INICIO DE LA NUEVA LÓGICA DINÁMICA ---
+            # 1. Buscamos las definiciones de campos para este workspace
+            custom_fields = project.workspace.custom_fields.all()
+            
+            # 2. Creamos un campo de formulario para cada definición
+            for field in custom_fields:
+                field_name = f'custom_field_{field.id}'
+                field_args = {'label': field.name, 'required': False}
+
+                if field.field_type == CustomField.FieldType.TEXT:
+                    self.fields[field_name] = forms.CharField(**field_args)
+                elif field.field_type == CustomField.FieldType.NUMBER:
+                    self.fields[field_name] = forms.DecimalField(**field_args)
+                elif field.field_type == CustomField.FieldType.DATE:
+                    self.fields[field_name] = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), **field_args)
+                elif field.field_type == CustomField.FieldType.DROPDOWN:
+                    choices = [('', '---------')] + [(option.id, option.value) for option in field.options.all()]
+                    self.fields[field_name] = forms.ChoiceField(choices=choices, **field_args)
+
+            # 3. Si estamos editando una tarea, rellenamos los valores iniciales
+            if self.instance.pk:
+                for value in self.instance.custom_field_values.all():
+                    field_name = f'custom_field_{value.field.id}'
+                    
+                    # Buscamos el valor correcto que hay que mostrar
+                    initial_value = value.get_value()
+                    if value.field.field_type == CustomField.FieldType.DROPDOWN and initial_value:
+                        self.initial[field_name] = initial_value.id
+                    else:
+                        self.initial[field_name] = initial_value
 
     class Meta:
         model = Task
@@ -112,4 +139,18 @@ class RoleForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class CustomFieldForm(forms.ModelForm):
+    class Meta:
+        model = CustomField
+        fields = ['name', 'field_type']
+        labels = {
+            'name': 'Nombre del Campo',
+            'field_type': 'Tipo de Cambio',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'field_type': forms.Select(attrs={'class': 'form-select'}),
         }

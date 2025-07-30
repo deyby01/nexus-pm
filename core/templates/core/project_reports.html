@@ -15,7 +15,7 @@
     <div class="row g-4">
         <div class="col-md-6">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-danger text-white">
+                <div class="card-header bg-danger text-dark">
                     <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Tareas Vencidas</h5>
                 </div>
                 <div class="list-group list-group-flush">
@@ -65,37 +65,37 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const ctx = document.getElementById('workloadChart');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'bar', // Tipo de gráfico: barras
-            data: {
-                labels: {{ workload_labels|safe }},
-                datasets: [{
-                    label: 'Nº de Tareas Asignadas',
-                    data: {{ workload_values|safe }},
-                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y', // <-- Esto hace que el gráfico sea horizontal
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false // Ocultamos la leyenda para un look más limpio
-                    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('workloadChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar', // Tipo de gráfico: barras
+                data: {
+                    labels: {{ workload_labels|safe }},
+                    datasets: [{
+                        label: 'Nº de Tareas Asignadas',
+                        data: {{ workload_values|safe }},
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
                 },
-                scales: {
-                    x: {
-                        beginAtZero: true // El eje X empieza en 0
+                options: {
+                    indexAxis: 'y', // <-- Esto hace que el gráfico sea horizontal
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false // Ocultamos la leyenda para un look más limpio
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true // El eje X empieza en 0
+                        }
                     }
                 }
-            }
-        });
-    }
-});
+            });
+        }
+    });
 </script>
 {% endblock %}

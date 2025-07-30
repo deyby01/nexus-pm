@@ -63,6 +63,35 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-12 mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Campos Personalizados</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Campos Existentes</h6>
+                            <ul class="list-group">
+                                {% for field in workspace.custom_fields.all %}
+                                    <li class="list-group-item">{{ field.name }} ({{ field.get_field_type_display }})</li>
+                                {% empty %}
+                                    <li class="list-group-item text-muted">Aún no has creado campos personalizados.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Crear Nuevo Campo</h6>
+                            <form action="{% url 'core:create_custom_field' workspace_slug=workspace.slug %}" method="post">
+                                {% csrf_token %}
+                                {{ custom_field_form.as_p }}
+                                <button type="submit" class="btn btn-primary mt-2 w-100">Añadir Campo</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">

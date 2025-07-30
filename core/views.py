@@ -4,8 +4,8 @@ from django.views.generic import ListView, CreateView, DetailView, TemplateView
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation, TimeLog, Role
-from .forms import WorkspaceForm, ProjectForm, TaskForm, CommentForm, InvitationForm, RoleForm
+from .models import Workspace, Membership, Project, Task, Comment, Attachment, Notification, Activity, Invitation, TimeLog, Role, CustomField ,CustomFieldValue
+from .forms import WorkspaceForm, ProjectForm, TaskForm, CommentForm, InvitationForm, RoleForm, CustomFieldForm
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -150,6 +150,7 @@ class WorkspaceManageView(LoginRequiredMixin, DetailView):
         context['invitation_form'] = InvitationForm()
         context['all_roles'] = Role.objects.all()
         context['role_form'] = RoleForm()
+        context['custom_field_form'] = CustomFieldForm()
         return context
     
 
@@ -454,6 +455,31 @@ def task_detail_update(request, pk):
         form = TaskForm(request.POST, instance=task, project=task.project)
         if form.is_valid():
             updated_task = form.save()
+            # --- INICIO DE LA LÓGICA PARA GUARDAR CAMPOS PERSONALIZADOS ---
+            custom_fields = updated_task.project.workspace.custom_fields.all()
+            for field in custom_fields:
+                field_name = f'custom_field_{field.id}'
+                value = request.POST.get(field_name)
+
+                if value:
+                    # Buscamos si ya existe un valor para este campo y tarea
+                    value_obj, created = CustomFieldValue.objects.get_or_create(
+                        task=updated_task,
+                        field=field
+                    )
+                    
+                    # Guardamos el valor en la columna correcta según el tipo
+                    if field.field_type == CustomField.FieldType.TEXT:
+                        value_obj.value_text = value
+                    elif field.field_type == CustomField.FieldType.NUMBER:
+                        value_obj.value_number = value
+                    elif field.field_type == CustomField.FieldType.DATE:
+                        value_obj.value_date = value
+                    elif field.field_type == CustomField.FieldType.DROPDOWN:
+                        value_obj.value_option_id = value
+                    
+                    value_obj.save()
+            # --- FIN DE LA LÓGICA ---
             return render(request, 'core/_task_update_success.html', {'task': updated_task})
         # Si el formulario NO es válido, la función continúa y renderiza el modal con los errores al final
     else: # Petición GET
@@ -739,4 +765,19 @@ def create_role(request, workspace_slug):
         for error in form.errors.values():
             messages.error(request, error)
             
+    return redirect('core:workspace_manage', workspace_slug=workspace.slug)
+
+
+@login_required
+@require_POST
+def create_custom_field(request, workspace_slug):
+    workspace = get_object_or_404(Workspace, slug=workspace_slug, owner=request.user)
+    form = CustomFieldForm(request.POST)
+    if form.is_valid():
+        field = form.save(commit=False)
+        field.workspace = workspace
+        field.save()
+        messages.success(request, f'Se ha creado el campo personalizado "{field.name}".')
+    else:
+        messages.error(request, 'Error al crear el campo.')
     return redirect('core:workspace_manage', workspace_slug=workspace.slug)
