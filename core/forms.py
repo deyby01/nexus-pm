@@ -42,7 +42,7 @@ class ProjectForm(forms.ModelForm):
             'description': 'Descripción',
             'deadline': 'Fecha Límite o Termino Proyecto',
             'status': 'Estado',
-            'budget': 'Presupuesto',
+            'budget': 'Presupuesto',    
         }
 
 
