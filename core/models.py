@@ -1,3 +1,4 @@
+from random import choices
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -71,12 +72,44 @@ class Membership(models.Model):
     
 class Project(models.Model):
     """ Representa un proyecto dentro de un workspace. """
+
+    class Status(models.TextChoices):
+        ACTIVE = 'ACTIVE', 'Activo'
+        ON_HOLD = 'ON_HOLD', 'En Pausa'
+        ARCHIVED = 'ARCHIVED', 'Archivado'
+
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='projects')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     deadline = models.DateField(blank=True, null=True)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # --- NUEVOS CAMPOS ---
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.ACTIVE
+    )
+    budget = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Presupuesto total estimado para el proyecto."
+    )
+    manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='managed_projects',
+        help_text="Usuario responsable del proyecto."
+    )
+    # --- FIN DE NUEVOS CAMPOS ---
+
+    class Meta:
+        ordering = ['name']
     
     def __str__(self):
         return self.name
@@ -153,6 +186,11 @@ class Task(models.Model):
     due_date = models.DateField(blank=True, null=True)
     slug = models.SlugField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    effort_points = models.PositiveSmallIntegerField(
+        default=1,
+        help_text="Puntos de esfuerzo estimados para esta tarea (ej: 1, 2, 3, 5, 8)"
+    )
 
     # --- NUEVOS CAMPOS ---
     priority = models.CharField(
@@ -308,3 +346,55 @@ class TimeLog(models.Model):
     
     def __str__(self):
         return f'Registro de {self.user} en {self.task.title} ({self.duration})'
+
+
+class CustomField(models.Model):
+    """ La definicion de un campo personalizado para un WOrkspace. """
+    class FieldType(models.TextChoices):
+        TEXT = 'TEXT', 'Texto Corto'
+        NUMBER = 'NUMBER', 'Número'
+        DATE = 'DATE', 'Fecha'
+        DROPDOWN = 'DROPDOWN', 'Menú Desplegable'
+
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='custom_fields')
+    name = models.CharField(max_length=100)
+    field_type = models.CharField(max_length=10, choices=FieldType.choices)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_field_type_display()}) en {self.workspace.name}"
+
+
+class FieldOption(models.Model):
+    """ Una opcion para un campo de tipo Menú Desplegable. """
+    custom_field = models.ForeignKey(CustomField, on_delete=models.CASCADE, related_name='options')
+    value = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.value
+
+class CustomFieldValue(models.Model):
+    """ El valor de un campo personalizado para una Tarea especifica. """
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='custom_field_values')
+    field = models.ForeignKey(CustomField, on_delete=models.CASCADE)
+
+    # Guardamos el valor en campos especificos segun el tipo.
+    value_text = models.CharField(max_length=255, null=True, blank=True)
+    value_number = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    value_date = models.DateField(null=True, blank=True)
+    value_option = models.ForeignKey(FieldOption, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.task.title} - {self.field.name}: {self.get_value()}"
+
+    def get_value(self):
+        """ Devuelve el valor correcto segun el tipo de campo. """
+        field_type = self.field.field_type
+        if field_type == CustomField.FieldType.TEXT:
+            return self.value_text
+        elif field_type == CustomField.FieldType.NUMBER:
+            return self.value_number
+        elif field_type == CustomField.FieldType.DATE:
+            return self.value_date
+        elif field_type == CustomField.FieldType.DROPDOWN:
+            return self.value_option
+        return None

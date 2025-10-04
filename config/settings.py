@@ -88,16 +88,43 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+# Configuracion base de datos por entorno
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
+
+if ENVIRONMENT == 'production':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
     }
-}
+elif ENVIRONMENT == 'staging':
+    # Para un entorno intermedio
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('STAGING_DB_NAME'),
+            'USER': os.getenv('STAGING_DB_USER'),
+            'PASSWORD': os.getenv('STAGING_DB_PASSWORD'),
+            'HOST': os.getenv('STAGING_DB_HOST', 'localhost'),
+            'PORT': os.getenv('STAGING_DB_PORT', '5432'),
+        }
+    }
+else:
+    # Configuración para desarrollo (SQLite) - POR DEFECTO
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_desarrollo.sqlite3',
+        }
+    }
+
+print(f"🔧 Entorno activo: {ENVIRONMENT}")
+print(f"💾 Base de datos: {DATABASES['default']['ENGINE'].split('.')[-1].upper()}")
 
 
 # Password validation
@@ -122,7 +149,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-es'
 
 TIME_ZONE = 'UTC'
 
@@ -158,12 +185,57 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Configuración de Django-Allauth
-#ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_LOGIN_METHODS = {'email'}
-#ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-#ACCOUNT_USERNAME_REQUIRED = False # No pedimos username en el registro
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional' # 'mandatory' para producción
 LOGIN_REDIRECT_URL = '/' # A donde ir después del login
 ACCOUNT_LOGOUT_ON_GET = True # Permite logout sin confirmación
+
+# ===== CONFIGURACIÓN DE LOGGING (NUEVA) =====
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple' if DEBUG else 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'core': {  # Tu aplicación
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Crear directorio de logs si no existe
+import os
+log_dir = BASE_DIR / 'logs'
+if not log_dir.exists():
+    log_dir.mkdir(exist_ok=True)

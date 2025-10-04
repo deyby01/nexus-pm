@@ -25,6 +25,16 @@
             </p>
         {% endif %}
 
+        <div class="custom-fields-container mt-2">
+            {% for value in task.custom_field_values.all %}
+                {% if value.get_value %}
+                    <p class="mb-0 text-muted">
+                        <small><strong>{{ value.field.name }}:</strong> {{ value.get_value }}</small>
+                    </p>
+                {% endif %}
+            {% endfor %}
+        </div>
+
         <p class="mb-0"><small>Límite: {{ task.due_date|default:"N/A" }}</small></p>
     </div>
 </div>
